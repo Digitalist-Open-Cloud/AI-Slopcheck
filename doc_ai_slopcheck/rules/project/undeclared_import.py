@@ -6,7 +6,7 @@ from pathlib import Path
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
-from doc_ai_slopcheck.rules.generic._manifest import (
+from doc_ai_slopcheck.rules.project._manifest import (
     load_declared_dependencies,
     python_stdlib_names,
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, DivisionByZeroRiskConfig
-from doc_ai_slopcheck.rules.generic.division_by_zero_risk import DivisionByZeroRiskRule
+from doc_ai_slopcheck.rules.error_handling.division_by_zero_risk import DivisionByZeroRiskRule
 
 
 def _make_config():

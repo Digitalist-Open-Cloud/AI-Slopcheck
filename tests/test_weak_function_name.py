@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, RulesConfig, WeakFunctionNameConfig
-from doc_ai_slopcheck.rules.generic.weak_function_name import WeakFunctionNameRule
+from doc_ai_slopcheck.rules.ai_slop.weak_function_name import WeakFunctionNameRule
 
 
 def _scan(content: str, path: str = "src/example.py", enabled: bool = True) -> list:

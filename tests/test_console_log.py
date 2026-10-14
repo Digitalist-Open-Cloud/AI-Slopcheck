@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ConsoleLogConfig
-from doc_ai_slopcheck.rules.generic.console_log_in_production import ConsoleLogInProductionRule
+from doc_ai_slopcheck.rules.ai_slop.console_log_in_production import ConsoleLogInProductionRule
 
 
 def _scan(content: str, path: str = "src/app.ts") -> list:

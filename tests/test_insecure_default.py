@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, InsecureDefaultConfig
-from doc_ai_slopcheck.rules.generic.insecure_default import InsecureDefaultRule
+from doc_ai_slopcheck.rules.security.insecure_default import InsecureDefaultRule
 
 
 def _scan(content: str, path: str = "src/service.py") -> list:

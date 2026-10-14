@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.bare_except_pass import BareExceptPassRule
+from doc_ai_slopcheck.rules.error_handling.bare_except_pass import BareExceptPassRule
 
 
 def _scan(content: str) -> list:

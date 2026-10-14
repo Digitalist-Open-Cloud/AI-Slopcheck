@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.stub_function_body import StubFunctionBodyRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body import StubFunctionBodyRule
 
 
 def _scan(content: str, config: AppConfig | None = None) -> list:

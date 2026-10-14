@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.plan_reference_comment import PlanReferenceCommentRule
+from doc_ai_slopcheck.rules.ai_slop.plan_reference_comment import PlanReferenceCommentRule
 
 
 def _scan(content: str, path: str = "src/app.py", config: AppConfig | None = None) -> list:

@@ -7,6 +7,8 @@ import typer
 
 from doc_ai_slopcheck.config import load_config
 from doc_ai_slopcheck.engine.api_routes import extract_all_routes
+from doc_ai_slopcheck.engine.duplication import RULE_ID as DUPLICATE_RULE_ID
+from doc_ai_slopcheck.engine.duplication import TITLE as DUPLICATE_TITLE
 from doc_ai_slopcheck.engine.repo_files import discover_files
 from doc_ai_slopcheck.engine.scanner import scan_paths
 from doc_ai_slopcheck.models import (
@@ -22,6 +24,7 @@ from doc_ai_slopcheck.output.annotations import render_annotations
 from doc_ai_slopcheck.output.html_report import render_html
 from doc_ai_slopcheck.output.markdown_summary import render_summary
 from doc_ai_slopcheck.output.sarif import render_sarif
+from doc_ai_slopcheck.rules.registry import build_rules
 from doc_ai_slopcheck.state.store import load_baseline, write_baseline
 
 app = typer.Typer(help="Deterministic scanner for AI-style code failures.", no_args_is_help=True)
@@ -328,6 +331,29 @@ def scan(
         )
 
     raise typer.Exit(code=exit_code)
+
+
+@app.command("rules")
+def rules_command(
+    config: str = typer.Option("", "--config", help="Config file; default: project config in ."),
+) -> None:
+    """List rule IDs, whether they are on, and what each one checks."""
+    app_config = load_config(repo_root=Path("."), explicit_path=Path(config) if config else None)
+    rows = [
+        (rule.category, rule.rule_id, rule.enabled(app_config), rule.title)
+        for rule in build_rules()
+    ]
+    rows.append(
+        ("maintainability", DUPLICATE_RULE_ID, app_config.rules.duplicate_code.enabled,
+         DUPLICATE_TITLE)
+    )
+    width = max(len(row[1]) for row in rows)
+    current = None
+    for category, rule_id, enabled, title in sorted(rows):
+        if category != current:
+            typer.echo(("\n" if current else "") + category)
+            current = category
+        typer.echo(f"  {rule_id:<{width}}  {'on ' if enabled else 'off'}  {title}")
 
 
 @app.command("summary")

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, SqlStringConcatConfig
-from doc_ai_slopcheck.rules.generic.sql_string_concat import SqlStringConcatRule
+from doc_ai_slopcheck.rules.security.sql_string_concat import SqlStringConcatRule
 
 
 def _scan(content: str, path: str = "src/db.py") -> list:

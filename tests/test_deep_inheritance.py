@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, DeepInheritanceConfig
-from doc_ai_slopcheck.rules.generic.deep_inheritance import DeepInheritanceRule
+from doc_ai_slopcheck.rules.maintainability.deep_inheritance import DeepInheritanceRule
 
 
 def _make_config(enabled: bool = True) -> AppConfig:

@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from doc_ai_slopcheck.config import AppConfig, MultipleClassesPerFileConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.multiple_classes_per_file import MultipleClassesPerFileRule
+from doc_ai_slopcheck.rules.maintainability.multiple_classes_per_file import (
+    MultipleClassesPerFileRule,
+)
 
 
 @pytest.fixture

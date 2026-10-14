@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, GoIgnoredErrorConfig
-from doc_ai_slopcheck.rules.generic.go_ignored_error import GoIgnoredErrorRule
+from doc_ai_slopcheck.rules.error_handling.go_ignored_error import GoIgnoredErrorRule
 
 
 def _scan(content: str, path: str = "main.go") -> list:

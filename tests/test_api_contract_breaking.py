@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import ApiContractBreakingConfig, AppConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.api_contract_breaking import ApiContractBreakingRule
+from doc_ai_slopcheck.rules.project.api_contract_breaking import ApiContractBreakingRule
 
 
 def _make_config(*, enabled: bool = True) -> AppConfig:

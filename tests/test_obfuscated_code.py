@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ObfuscatedCodeConfig
-from doc_ai_slopcheck.rules.generic.obfuscated_code import ObfuscatedCodeRule
+from doc_ai_slopcheck.rules.security.obfuscated_code import ObfuscatedCodeRule
 
 
 def _scan(content: str, path: str = "src/util.py") -> list:

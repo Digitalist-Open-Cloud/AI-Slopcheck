@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, StaleCommentConfig
-from doc_ai_slopcheck.rules.generic.stale_comment import StaleCommentRule
+from doc_ai_slopcheck.rules.ai_slop.stale_comment import StaleCommentRule
 
 
 def _make_config(enabled: bool = True) -> AppConfig:

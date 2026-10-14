@@ -7,16 +7,16 @@ from pathlib import Path
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.engine.context_filter import non_code_lines, php_comments
 from doc_ai_slopcheck.engine.scanner import scan_paths
-from doc_ai_slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
-from doc_ai_slopcheck.rules.generic.large_function import LargeFunctionRule
-from doc_ai_slopcheck.rules.generic.obfuscated_code import ObfuscatedCodeRule
-from doc_ai_slopcheck.rules.generic.php_user_input_sink import PhpUserInputSinkRule
-from doc_ai_slopcheck.rules.generic.plan_reference_comment import PlanReferenceCommentRule
-from doc_ai_slopcheck.rules.generic.sql_string_concat import SqlStringConcatRule
-from doc_ai_slopcheck.rules.generic.stub_function_body_php import StubFunctionBodyPhpRule
-from doc_ai_slopcheck.rules.generic.unreachable_code_after_return import (
+from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
+from doc_ai_slopcheck.rules.ai_slop.plan_reference_comment import PlanReferenceCommentRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body_php import StubFunctionBodyPhpRule
+from doc_ai_slopcheck.rules.error_handling.unreachable_code_after_return import (
     UnreachableCodeAfterReturnRule,
 )
+from doc_ai_slopcheck.rules.maintainability.large_function import LargeFunctionRule
+from doc_ai_slopcheck.rules.security.obfuscated_code import ObfuscatedCodeRule
+from doc_ai_slopcheck.rules.security.php_user_input_sink import PhpUserInputSinkRule
+from doc_ai_slopcheck.rules.security.sql_string_concat import SqlStringConcatRule
 
 
 def _scan(rule, content: str, path: str = "src/Foo.php") -> list:
@@ -170,14 +170,14 @@ def test_generated_files_are_skipped(tmp_path: Path) -> None:
 
 
 def test_secret_read_from_env_is_not_hardcoded() -> None:
-    from doc_ai_slopcheck.rules.generic.hardcoded_secret import HardcodedSecretRule
+    from doc_ai_slopcheck.rules.security.hardcoded_secret import HardcodedSecretRule
 
     code = "$url = $_ENV['APP_URL'] . 'api/preview?secret=' . $_ENV['PREVIEW_TOKEN'];\n"
     assert _scan(HardcodedSecretRule(), code) == []
 
 
 def test_explained_empty_catch_is_intentional() -> None:
-    from doc_ai_slopcheck.rules.generic.bare_except_pass_js import BareExceptPassJsRule
+    from doc_ai_slopcheck.rules.error_handling.bare_except_pass_js import BareExceptPassJsRule
 
     code = (
         "<?php\ntry { f(); }\n"
@@ -199,7 +199,7 @@ def test_documented_method_mentioning_implementation_is_not_a_stub() -> None:
 
 
 def test_definitions_and_closure_captures_are_not_calls() -> None:
-    from doc_ai_slopcheck.rules.generic.many_positional_args import ManyPositionalArgsRule
+    from doc_ai_slopcheck.rules.maintainability.many_positional_args import ManyPositionalArgsRule
 
     code = (
         "<?php\n"
@@ -258,7 +258,7 @@ def test_hex_escapes_in_regex_are_not_obfuscation() -> None:
 
 
 def test_js_promise_awaited_or_returned_is_handled_by_caller() -> None:
-    from doc_ai_slopcheck.rules.generic.js_unhandled_promise import JsUnhandledPromiseRule
+    from doc_ai_slopcheck.rules.error_handling.js_unhandled_promise import JsUnhandledPromiseRule
 
     code = (
         "await writer.ready.then(() => writer.write(data));\n"
@@ -277,7 +277,7 @@ def test_js_promise_awaited_or_returned_is_handled_by_caller() -> None:
 
 
 def test_js_polling_loops_are_sequential_by_design() -> None:
-    from doc_ai_slopcheck.rules.generic.js_await_in_loop import JsAwaitInLoopRule
+    from doc_ai_slopcheck.rules.idioms.js_await_in_loop import JsAwaitInLoopRule
 
     code = (
         "for await (const _ of setPromiseInterval(1000)) {\n"
@@ -295,7 +295,7 @@ def test_js_polling_loops_are_sequential_by_design() -> None:
 
 
 def test_static_inner_html_is_not_flagged() -> None:
-    from doc_ai_slopcheck.rules.generic.js_dangerously_set_html import (
+    from doc_ai_slopcheck.rules.security.js_dangerously_set_html import (
         JsDangerouslySetHtmlRule,
     )
 
@@ -310,7 +310,7 @@ def test_static_inner_html_is_not_flagged() -> None:
 
 
 def test_loose_equality_inside_string_is_ignored() -> None:
-    from doc_ai_slopcheck.rules.generic.js_loose_equality import JsLooseEqualityRule
+    from doc_ai_slopcheck.rules.idioms.js_loose_equality import JsLooseEqualityRule
 
     code = 'const s = "data:text/html;base64,PHNjcmlwdD4==";\nif (a == b) {}\n'
     findings = _scan(JsLooseEqualityRule(), code, path="src/x.ts")

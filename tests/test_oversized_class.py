@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from doc_ai_slopcheck.config import AppConfig, OversizedClassConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.oversized_class import OversizedClassRule
+from doc_ai_slopcheck.rules.maintainability.oversized_class import OversizedClassRule
 
 
 @pytest.fixture

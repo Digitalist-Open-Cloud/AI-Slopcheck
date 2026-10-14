@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, JsLooseEqualityConfig
-from doc_ai_slopcheck.rules.generic.js_loose_equality import JsLooseEqualityRule
+from doc_ai_slopcheck.rules.idioms.js_loose_equality import JsLooseEqualityRule
 
 
 def _scan(content: str, path: str = "src/util.ts") -> list:

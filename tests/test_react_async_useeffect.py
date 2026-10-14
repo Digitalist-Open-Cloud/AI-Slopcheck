@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ReactAsyncUseeffectConfig
-from doc_ai_slopcheck.rules.generic.react_async_useeffect import ReactAsyncUseeffectRule
+from doc_ai_slopcheck.rules.idioms.react_async_useeffect import ReactAsyncUseeffectRule
 
 
 def _scan(content: str, path: str = "src/Component.tsx") -> list:

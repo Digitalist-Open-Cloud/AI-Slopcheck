@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.ai_identity_refusal import AiIdentityRefusalRule
+from doc_ai_slopcheck.rules.ai_slop.ai_identity_refusal import AiIdentityRefusalRule
 
 
 def _scan(content: str) -> list:

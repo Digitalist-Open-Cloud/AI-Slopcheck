@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, GoErrorWrapConfig
-from doc_ai_slopcheck.rules.generic.go_error_wrap_missing_w import GoErrorWrapMissingWRule
+from doc_ai_slopcheck.rules.error_handling.go_error_wrap_missing_w import GoErrorWrapMissingWRule
 
 
 def _scan(content: str, path: str = "service.go") -> list:

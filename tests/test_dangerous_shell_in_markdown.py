@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from doc_ai_slopcheck.config import AppConfig, DangerousShellInMarkdownConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
+from doc_ai_slopcheck.rules.security.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
 
 
 @pytest.fixture

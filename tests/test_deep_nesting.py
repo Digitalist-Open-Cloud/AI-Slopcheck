@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, DeepNestingConfig
-from doc_ai_slopcheck.rules.generic.deep_nesting import DeepNestingRule
+from doc_ai_slopcheck.rules.maintainability.deep_nesting import DeepNestingRule
 
 
 def _make_config() -> AppConfig:

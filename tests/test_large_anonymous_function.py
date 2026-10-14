@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, LargeAnonymousFunctionConfig
-from doc_ai_slopcheck.rules.generic.large_anonymous_function import LargeAnonymousFunctionRule
+from doc_ai_slopcheck.rules.maintainability.large_anonymous_function import (
+    LargeAnonymousFunctionRule,
+)
 
 
 def _make_config(enabled: bool = True, max_lines: int = 20) -> AppConfig:

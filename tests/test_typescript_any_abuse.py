@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, TypescriptAnyAbuseConfig
-from doc_ai_slopcheck.rules.generic.typescript_any_abuse import TypescriptAnyAbuseRule
+from doc_ai_slopcheck.rules.idioms.typescript_any_abuse import TypescriptAnyAbuseRule
 
 
 def _scan(content: str, path: str = "src/service.ts") -> list:

@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ContradictoryNullCheckConfig
-from doc_ai_slopcheck.rules.generic.contradictory_null_check import ContradictoryNullCheckRule
+from doc_ai_slopcheck.rules.error_handling.contradictory_null_check import (
+    ContradictoryNullCheckRule,
+)
 
 
 def _scan(content: str, path: str = "module.py") -> list:

@@ -56,6 +56,7 @@ JS_THROW_NOT_IMPL_RE = re.compile(
 
 class StubFunctionBodyJsRule(Rule):
     rule_id = "stub_function_body_js"
+    config_key = "stub_function_body"
     title = "Stub function body (JS/TS)"
     supported_extensions = {".js", ".jsx", ".ts", ".tsx"}
 

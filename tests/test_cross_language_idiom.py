@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, CrossLanguageIdiomConfig
-from doc_ai_slopcheck.rules.generic.cross_language_idiom import CrossLanguageIdiomRule
+from doc_ai_slopcheck.rules.ai_slop.cross_language_idiom import CrossLanguageIdiomRule
 
 
 def _scan(content: str, path: str) -> list:

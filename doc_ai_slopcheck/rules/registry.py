@@ -1,178 +1,178 @@
 from __future__ import annotations
 
+from doc_ai_slopcheck.rules.ai_slop.ai_conversational_bleed import AiConversationalBleedRule
+from doc_ai_slopcheck.rules.ai_slop.ai_hardcoded_mocks import AiHardcodedMocksRule
+from doc_ai_slopcheck.rules.ai_slop.ai_identity_refusal import AiIdentityRefusalRule
+from doc_ai_slopcheck.rules.ai_slop.ai_instruction_comment import AiInstructionCommentRule
+from doc_ai_slopcheck.rules.ai_slop.console_log_in_production import ConsoleLogInProductionRule
+from doc_ai_slopcheck.rules.ai_slop.cross_language_idiom import CrossLanguageIdiomRule
+from doc_ai_slopcheck.rules.ai_slop.dead_code_comment import DeadCodeCommentRule
+from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
+from doc_ai_slopcheck.rules.ai_slop.hallucinated_placeholder import HallucinatedPlaceholderRule
+from doc_ai_slopcheck.rules.ai_slop.incomplete_error_message import IncompleteErrorMessageRule
+from doc_ai_slopcheck.rules.ai_slop.placeholder_tokens import PlaceholderTokensRule
+from doc_ai_slopcheck.rules.ai_slop.plan_reference_comment import PlanReferenceCommentRule
+from doc_ai_slopcheck.rules.ai_slop.stale_comment import StaleCommentRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body import StubFunctionBodyRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body_go import StubFunctionBodyGoRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body_js import StubFunctionBodyJsRule
+from doc_ai_slopcheck.rules.ai_slop.stub_function_body_php import StubFunctionBodyPhpRule
+from doc_ai_slopcheck.rules.ai_slop.weak_function_name import WeakFunctionNameRule
 from doc_ai_slopcheck.rules.base import Rule
-from doc_ai_slopcheck.rules.generic.ai_conversational_bleed import AiConversationalBleedRule
-from doc_ai_slopcheck.rules.generic.ai_hardcoded_mocks import AiHardcodedMocksRule
-from doc_ai_slopcheck.rules.generic.ai_identity_refusal import AiIdentityRefusalRule
-from doc_ai_slopcheck.rules.generic.ai_instruction_comment import AiInstructionCommentRule
-from doc_ai_slopcheck.rules.generic.api_contract_breaking import ApiContractBreakingRule
-from doc_ai_slopcheck.rules.generic.assignment_in_conditional import AssignmentInConditionalRule
-from doc_ai_slopcheck.rules.generic.bare_except_pass import BareExceptPassRule
-from doc_ai_slopcheck.rules.generic.bare_except_pass_go import BareExceptPassGoRule
-from doc_ai_slopcheck.rules.generic.bare_except_pass_js import BareExceptPassJsRule
-from doc_ai_slopcheck.rules.generic.break_in_nested_loop import BreakInNestedLoopRule
-from doc_ai_slopcheck.rules.generic.collection_modify_while_iterating import (
-    CollectionModifyWhileIteratingRule,
+from doc_ai_slopcheck.rules.concurrency.global_state_leak import GlobalStateLeakRule
+from doc_ai_slopcheck.rules.concurrency.go_missing_defer import GoMissingDeferRule
+from doc_ai_slopcheck.rules.concurrency.js_timer_no_cleanup import JsTimerNoCleanupRule
+from doc_ai_slopcheck.rules.concurrency.lock_without_release import LockWithoutReleaseRule
+from doc_ai_slopcheck.rules.concurrency.thread_unsafe_global import ThreadUnsafeGlobalRule
+from doc_ai_slopcheck.rules.concurrency.use_after_free import UseAfterFreeRule
+from doc_ai_slopcheck.rules.error_handling.bare_except_pass import BareExceptPassRule
+from doc_ai_slopcheck.rules.error_handling.bare_except_pass_go import BareExceptPassGoRule
+from doc_ai_slopcheck.rules.error_handling.bare_except_pass_js import BareExceptPassJsRule
+from doc_ai_slopcheck.rules.error_handling.contradictory_null_check import (
+    ContradictoryNullCheckRule,
 )
-from doc_ai_slopcheck.rules.generic.console_log_in_production import ConsoleLogInProductionRule
-from doc_ai_slopcheck.rules.generic.contradictory_null_check import ContradictoryNullCheckRule
-from doc_ai_slopcheck.rules.generic.cross_language_idiom import CrossLanguageIdiomRule
-from doc_ai_slopcheck.rules.generic.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
-from doc_ai_slopcheck.rules.generic.dead_code_comment import DeadCodeCommentRule
-from doc_ai_slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
-from doc_ai_slopcheck.rules.generic.deep_inheritance import DeepInheritanceRule
-from doc_ai_slopcheck.rules.generic.deep_nesting import DeepNestingRule
-from doc_ai_slopcheck.rules.generic.division_by_zero_risk import DivisionByZeroRiskRule
-from doc_ai_slopcheck.rules.generic.early_return_opportunity import EarlyReturnOpportunityRule
-from doc_ai_slopcheck.rules.generic.global_state_leak import GlobalStateLeakRule
-from doc_ai_slopcheck.rules.generic.go_error_wrap_missing_w import GoErrorWrapMissingWRule
-from doc_ai_slopcheck.rules.generic.go_ignored_error import GoIgnoredErrorRule
-from doc_ai_slopcheck.rules.generic.go_missing_defer import GoMissingDeferRule
-from doc_ai_slopcheck.rules.generic.goto_usage import GotoUsageRule
-from doc_ai_slopcheck.rules.generic.hallucinated_placeholder import HallucinatedPlaceholderRule
-from doc_ai_slopcheck.rules.generic.hardcoded_secret import HardcodedSecretRule
-from doc_ai_slopcheck.rules.generic.idor_risk import IdorRiskRule
-from doc_ai_slopcheck.rules.generic.incomplete_error_message import IncompleteErrorMessageRule
-from doc_ai_slopcheck.rules.generic.insecure_default import InsecureDefaultRule
-from doc_ai_slopcheck.rules.generic.js_await_in_loop import JsAwaitInLoopRule
-from doc_ai_slopcheck.rules.generic.js_dangerously_set_html import JsDangerouslySetHtmlRule
-from doc_ai_slopcheck.rules.generic.js_json_parse_unguarded import JsJsonParseUnguardedRule
-from doc_ai_slopcheck.rules.generic.js_loose_equality import JsLooseEqualityRule
-from doc_ai_slopcheck.rules.generic.js_timer_no_cleanup import JsTimerNoCleanupRule
-from doc_ai_slopcheck.rules.generic.js_unhandled_promise import JsUnhandledPromiseRule
-from doc_ai_slopcheck.rules.generic.large_anonymous_function import LargeAnonymousFunctionRule
-from doc_ai_slopcheck.rules.generic.large_file import LargeFileRule
-from doc_ai_slopcheck.rules.generic.large_function import LargeFunctionRule
-from doc_ai_slopcheck.rules.generic.lock_without_release import LockWithoutReleaseRule
-from doc_ai_slopcheck.rules.generic.many_positional_args import ManyPositionalArgsRule
-from doc_ai_slopcheck.rules.generic.missing_default_branch import MissingDefaultBranchRule
-from doc_ai_slopcheck.rules.generic.multiple_classes_per_file import MultipleClassesPerFileRule
-from doc_ai_slopcheck.rules.generic.obfuscated_code import ObfuscatedCodeRule
-from doc_ai_slopcheck.rules.generic.obvious_perf_drain import ObviousPerfDrainRule
-from doc_ai_slopcheck.rules.generic.oversized_class import OversizedClassRule
-from doc_ai_slopcheck.rules.generic.param_reassignment import ParamReassignmentRule
-from doc_ai_slopcheck.rules.generic.php_user_input_sink import PhpUserInputSinkRule
-from doc_ai_slopcheck.rules.generic.placeholder_tokens import PlaceholderTokensRule
-from doc_ai_slopcheck.rules.generic.plan_reference_comment import PlanReferenceCommentRule
-from doc_ai_slopcheck.rules.generic.python_mutable_default import PythonMutableDefaultRule
-from doc_ai_slopcheck.rules.generic.react_async_useeffect import ReactAsyncUseeffectRule
-from doc_ai_slopcheck.rules.generic.react_index_key import ReactIndexKeyRule
-from doc_ai_slopcheck.rules.generic.recursion_without_limit import RecursionWithoutLimitRule
-from doc_ai_slopcheck.rules.generic.redundant_sql_index import RedundantSqlIndexRule
-from doc_ai_slopcheck.rules.generic.regex_dos import RegexDosRule
-from doc_ai_slopcheck.rules.generic.select_star_sql import SelectStarSqlRule
-from doc_ai_slopcheck.rules.generic.short_variable_name import ShortVariableNameRule
-from doc_ai_slopcheck.rules.generic.sql_string_concat import SqlStringConcatRule
-from doc_ai_slopcheck.rules.generic.stale_comment import StaleCommentRule
-from doc_ai_slopcheck.rules.generic.stub_function_body import StubFunctionBodyRule
-from doc_ai_slopcheck.rules.generic.stub_function_body_go import StubFunctionBodyGoRule
-from doc_ai_slopcheck.rules.generic.stub_function_body_js import StubFunctionBodyJsRule
-from doc_ai_slopcheck.rules.generic.stub_function_body_php import StubFunctionBodyPhpRule
-from doc_ai_slopcheck.rules.generic.thread_unsafe_global import ThreadUnsafeGlobalRule
-from doc_ai_slopcheck.rules.generic.typescript_any_abuse import TypescriptAnyAbuseRule
-from doc_ai_slopcheck.rules.generic.undeclared_import import UndeclaredImportRule
-from doc_ai_slopcheck.rules.generic.unreachable_code_after_return import (
+from doc_ai_slopcheck.rules.error_handling.division_by_zero_risk import DivisionByZeroRiskRule
+from doc_ai_slopcheck.rules.error_handling.go_error_wrap_missing_w import GoErrorWrapMissingWRule
+from doc_ai_slopcheck.rules.error_handling.go_ignored_error import GoIgnoredErrorRule
+from doc_ai_slopcheck.rules.error_handling.js_json_parse_unguarded import JsJsonParseUnguardedRule
+from doc_ai_slopcheck.rules.error_handling.js_unhandled_promise import JsUnhandledPromiseRule
+from doc_ai_slopcheck.rules.error_handling.missing_default_branch import MissingDefaultBranchRule
+from doc_ai_slopcheck.rules.error_handling.unreachable_code_after_return import (
     UnreachableCodeAfterReturnRule,
 )
-from doc_ai_slopcheck.rules.generic.unused_suppression import UnusedSuppressionRule
-from doc_ai_slopcheck.rules.generic.use_after_free import UseAfterFreeRule
-from doc_ai_slopcheck.rules.generic.weak_function_name import WeakFunctionNameRule
-from doc_ai_slopcheck.rules.generic.weak_hash import WeakHashRule
-from doc_ai_slopcheck.rules.repo.forbidden_import_edges import ForbiddenImportEdgesRule
+from doc_ai_slopcheck.rules.idioms.collection_modify_while_iterating import (
+    CollectionModifyWhileIteratingRule,
+)
+from doc_ai_slopcheck.rules.idioms.js_await_in_loop import JsAwaitInLoopRule
+from doc_ai_slopcheck.rules.idioms.js_loose_equality import JsLooseEqualityRule
+from doc_ai_slopcheck.rules.idioms.python_mutable_default import PythonMutableDefaultRule
+from doc_ai_slopcheck.rules.idioms.react_async_useeffect import ReactAsyncUseeffectRule
+from doc_ai_slopcheck.rules.idioms.react_index_key import ReactIndexKeyRule
+from doc_ai_slopcheck.rules.idioms.redundant_sql_index import RedundantSqlIndexRule
+from doc_ai_slopcheck.rules.idioms.select_star_sql import SelectStarSqlRule
+from doc_ai_slopcheck.rules.idioms.typescript_any_abuse import TypescriptAnyAbuseRule
+from doc_ai_slopcheck.rules.maintainability.assignment_in_conditional import (
+    AssignmentInConditionalRule,
+)
+from doc_ai_slopcheck.rules.maintainability.break_in_nested_loop import BreakInNestedLoopRule
+from doc_ai_slopcheck.rules.maintainability.deep_inheritance import DeepInheritanceRule
+from doc_ai_slopcheck.rules.maintainability.deep_nesting import DeepNestingRule
+from doc_ai_slopcheck.rules.maintainability.early_return_opportunity import (
+    EarlyReturnOpportunityRule,
+)
+from doc_ai_slopcheck.rules.maintainability.goto_usage import GotoUsageRule
+from doc_ai_slopcheck.rules.maintainability.large_anonymous_function import (
+    LargeAnonymousFunctionRule,
+)
+from doc_ai_slopcheck.rules.maintainability.large_file import LargeFileRule
+from doc_ai_slopcheck.rules.maintainability.large_function import LargeFunctionRule
+from doc_ai_slopcheck.rules.maintainability.many_positional_args import ManyPositionalArgsRule
+from doc_ai_slopcheck.rules.maintainability.multiple_classes_per_file import (
+    MultipleClassesPerFileRule,
+)
+from doc_ai_slopcheck.rules.maintainability.obvious_perf_drain import ObviousPerfDrainRule
+from doc_ai_slopcheck.rules.maintainability.oversized_class import OversizedClassRule
+from doc_ai_slopcheck.rules.maintainability.param_reassignment import ParamReassignmentRule
+from doc_ai_slopcheck.rules.maintainability.recursion_without_limit import RecursionWithoutLimitRule
+from doc_ai_slopcheck.rules.maintainability.short_variable_name import ShortVariableNameRule
+from doc_ai_slopcheck.rules.project.api_contract_breaking import ApiContractBreakingRule
+from doc_ai_slopcheck.rules.project.forbidden_import_edges import ForbiddenImportEdgesRule
+from doc_ai_slopcheck.rules.project.undeclared_import import UndeclaredImportRule
+from doc_ai_slopcheck.rules.project.unused_suppression import UnusedSuppressionRule
+from doc_ai_slopcheck.rules.security.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
+from doc_ai_slopcheck.rules.security.hardcoded_secret import HardcodedSecretRule
+from doc_ai_slopcheck.rules.security.idor_risk import IdorRiskRule
+from doc_ai_slopcheck.rules.security.insecure_default import InsecureDefaultRule
+from doc_ai_slopcheck.rules.security.js_dangerously_set_html import JsDangerouslySetHtmlRule
+from doc_ai_slopcheck.rules.security.obfuscated_code import ObfuscatedCodeRule
+from doc_ai_slopcheck.rules.security.php_user_input_sink import PhpUserInputSinkRule
+from doc_ai_slopcheck.rules.security.regex_dos import RegexDosRule
+from doc_ai_slopcheck.rules.security.sql_string_concat import SqlStringConcatRule
+from doc_ai_slopcheck.rules.security.weak_hash import WeakHashRule
 
 
 def build_rules() -> list[Rule]:
+    """All rules, grouped like the rules/ folders. Order doesn't affect results."""
     return [
-        # Original rules
+        # ai_slop
+        AiConversationalBleedRule(),
+        AiHardcodedMocksRule(),
+        AiIdentityRefusalRule(),
+        AiInstructionCommentRule(),
+        ConsoleLogInProductionRule(),
+        CrossLanguageIdiomRule(),
+        DeadCodeCommentRule(),
+        DebugCodeLeftRule(),
+        HallucinatedPlaceholderRule(),
+        IncompleteErrorMessageRule(),
         PlaceholderTokensRule(),
         PlanReferenceCommentRule(),
-        ForbiddenImportEdgesRule(),
-        # Tier 1: AI code failure detection
-        StubFunctionBodyRule(),
-        AiInstructionCommentRule(),
-        BareExceptPassRule(),
-        # Tier 2: Smoking guns
-        AiConversationalBleedRule(),
-        AiIdentityRefusalRule(),
-        HallucinatedPlaceholderRule(),
-        # Tier 3: Supplementary
-        DeadCodeCommentRule(),
-        IncompleteErrorMessageRule(),
-        MissingDefaultBranchRule(),
-        AiHardcodedMocksRule(),
-        # Multi-language variants
+        StaleCommentRule(),
+        StubFunctionBodyGoRule(),
         StubFunctionBodyJsRule(),
         StubFunctionBodyPhpRule(),
-        PhpUserInputSinkRule(),
-        StubFunctionBodyGoRule(),
-        BareExceptPassJsRule(),
-        BareExceptPassGoRule(),
-        # Security rules (Phase 2)
-        UndeclaredImportRule(),
-        SqlStringConcatRule(),
-        InsecureDefaultRule(),
+        StubFunctionBodyRule(),
+        WeakFunctionNameRule(),
+        # security
+        DangerousShellInMarkdownRule(),
         HardcodedSecretRule(),
-        # Language-specific rules (Phase 3)
-        TypescriptAnyAbuseRule(),
-        ReactIndexKeyRule(),
-        ReactAsyncUseeffectRule(),
-        GoIgnoredErrorRule(),
-        PythonMutableDefaultRule(),
-        GoMissingDeferRule(),
-        # Phase 4: Language-quality rules
-        ConsoleLogInProductionRule(),
+        IdorRiskRule(),
+        InsecureDefaultRule(),
+        JsDangerouslySetHtmlRule(),
+        ObfuscatedCodeRule(),
+        PhpUserInputSinkRule(),
+        RegexDosRule(),
+        SqlStringConcatRule(),
+        WeakHashRule(),
+        # error_handling
+        BareExceptPassGoRule(),
+        BareExceptPassJsRule(),
+        BareExceptPassRule(),
+        ContradictoryNullCheckRule(),
+        DivisionByZeroRiskRule(),
         GoErrorWrapMissingWRule(),
-        CrossLanguageIdiomRule(),
-        # Meta-rules
-        UnusedSuppressionRule(),
-        # Phase 5: JS/Node and cross-language rules
-        JsAwaitInLoopRule(),
+        GoIgnoredErrorRule(),
         JsJsonParseUnguardedRule(),
         JsUnhandledPromiseRule(),
-        JsTimerNoCleanupRule(),
-        JsLooseEqualityRule(),
-        JsDangerouslySetHtmlRule(),
-        DeepNestingRule(),
-        LargeFunctionRule(),
-        SelectStarSqlRule(),
-        WeakHashRule(),
-        RegexDosRule(),
-        ObviousPerfDrainRule(),
-        # Phase 6: Obfuscation, global state, iteration safety, numeric safety
-        ObfuscatedCodeRule(),
-        GlobalStateLeakRule(),
-        CollectionModifyWhileIteratingRule(),
-        DivisionByZeroRiskRule(),
+        MissingDefaultBranchRule(),
         UnreachableCodeAfterReturnRule(),
-        # Phase 7: Code quality and correctness
-        ParamReassignmentRule(),
-        LargeFileRule(),
-        ShortVariableNameRule(),
-        GotoUsageRule(),
-        AssignmentInConditionalRule(),
-        # Phase 8: Structure and design rules
-        EarlyReturnOpportunityRule(),
-        RecursionWithoutLimitRule(),
-        DeepInheritanceRule(),
-        LargeAnonymousFunctionRule(),
-        # Phase 9: Debug and comment quality
-        DebugCodeLeftRule(),
-        StaleCommentRule(),
-        # Phase 10: Concurrency, IDOR, and null-check correctness
-        ContradictoryNullCheckRule(),
+        # concurrency
+        GlobalStateLeakRule(),
+        GoMissingDeferRule(),
+        JsTimerNoCleanupRule(),
         LockWithoutReleaseRule(),
-        IdorRiskRule(),
         ThreadUnsafeGlobalRule(),
-        # Phase 11: Call-site design, SQL schema, memory safety, naming
-        ManyPositionalArgsRule(),
-        RedundantSqlIndexRule(),
         UseAfterFreeRule(),
-        WeakFunctionNameRule(),
-        # Phase 12: Structure, control flow, and documentation safety
-        MultipleClassesPerFileRule(),
-        OversizedClassRule(),
+        # maintainability
+        AssignmentInConditionalRule(),
         BreakInNestedLoopRule(),
-        DangerousShellInMarkdownRule(),
-        # Phase 13: API contract detection
+        DeepInheritanceRule(),
+        DeepNestingRule(),
+        EarlyReturnOpportunityRule(),
+        GotoUsageRule(),
+        LargeAnonymousFunctionRule(),
+        LargeFileRule(),
+        LargeFunctionRule(),
+        ManyPositionalArgsRule(),
+        MultipleClassesPerFileRule(),
+        ObviousPerfDrainRule(),
+        OversizedClassRule(),
+        ParamReassignmentRule(),
+        RecursionWithoutLimitRule(),
+        ShortVariableNameRule(),
+        # idioms
+        CollectionModifyWhileIteratingRule(),
+        JsAwaitInLoopRule(),
+        JsLooseEqualityRule(),
+        PythonMutableDefaultRule(),
+        ReactAsyncUseeffectRule(),
+        ReactIndexKeyRule(),
+        RedundantSqlIndexRule(),
+        SelectStarSqlRule(),
+        TypescriptAnyAbuseRule(),
+        # project
         ApiContractBreakingRule(),
+        ForbiddenImportEdgesRule(),
+        UndeclaredImportRule(),
+        UnusedSuppressionRule(),
     ]

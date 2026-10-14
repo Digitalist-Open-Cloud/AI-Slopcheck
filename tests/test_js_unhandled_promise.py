@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, JsUnhandledPromiseConfig
-from doc_ai_slopcheck.rules.generic.js_unhandled_promise import JsUnhandledPromiseRule
+from doc_ai_slopcheck.rules.error_handling.js_unhandled_promise import JsUnhandledPromiseRule
 
 
 def _scan(content: str, path: str = "src/api.ts") -> list:

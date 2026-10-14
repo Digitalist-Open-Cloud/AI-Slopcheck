@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, PythonMutableDefaultConfig
-from doc_ai_slopcheck.rules.generic.python_mutable_default import PythonMutableDefaultRule
+from doc_ai_slopcheck.rules.idioms.python_mutable_default import PythonMutableDefaultRule
 
 
 def _scan(content: str, path: str = "src/utils.py") -> list:

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, PlaceholderTokensConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.placeholder_tokens import PlaceholderTokensRule
+from doc_ai_slopcheck.rules.ai_slop.placeholder_tokens import PlaceholderTokensRule
 
 
 def test_placeholder_tokens_rule_finds_todo() -> None:

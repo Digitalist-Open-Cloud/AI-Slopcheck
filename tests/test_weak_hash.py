@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, WeakHashConfig
-from doc_ai_slopcheck.rules.generic.weak_hash import WeakHashRule
+from doc_ai_slopcheck.rules.security.weak_hash import WeakHashRule
 
 
 def _scan(content: str, path: str = "src/crypto.py") -> list:

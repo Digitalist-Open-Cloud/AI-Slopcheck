@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, LockWithoutReleaseConfig
-from doc_ai_slopcheck.rules.generic.lock_without_release import LockWithoutReleaseRule
+from doc_ai_slopcheck.rules.concurrency.lock_without_release import LockWithoutReleaseRule
 
 
 def _scan(content: str, path: str = "worker.py") -> list:

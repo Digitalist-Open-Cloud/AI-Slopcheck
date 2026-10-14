@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.incomplete_error_message import IncompleteErrorMessageRule
+from doc_ai_slopcheck.rules.ai_slop.incomplete_error_message import IncompleteErrorMessageRule
 
 
 def _scan(content: str, path: str = "src/service.py") -> list:

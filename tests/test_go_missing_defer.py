@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, GoMissingDeferConfig
-from doc_ai_slopcheck.rules.generic.go_missing_defer import GoMissingDeferRule
+from doc_ai_slopcheck.rules.concurrency.go_missing_defer import GoMissingDeferRule
 
 
 def _scan(content: str, path: str = "main.go") -> list:

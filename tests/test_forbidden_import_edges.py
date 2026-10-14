@@ -6,7 +6,7 @@ from doc_ai_slopcheck.config import (
     ForbiddenImportEdgesConfig,
     RulesConfig,
 )
-from doc_ai_slopcheck.rules.repo.forbidden_import_edges import ForbiddenImportEdgesRule
+from doc_ai_slopcheck.rules.project.forbidden_import_edges import ForbiddenImportEdgesRule
 
 
 def _make_config(

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, RedundantSqlIndexConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.redundant_sql_index import RedundantSqlIndexRule
+from doc_ai_slopcheck.rules.idioms.redundant_sql_index import RedundantSqlIndexRule
 
 
 def _scan(content: str, path: str = "schema.sql", enabled: bool = True) -> list:

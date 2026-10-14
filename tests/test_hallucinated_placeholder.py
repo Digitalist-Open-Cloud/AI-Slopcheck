@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.hallucinated_placeholder import HallucinatedPlaceholderRule
+from doc_ai_slopcheck.rules.ai_slop.hallucinated_placeholder import HallucinatedPlaceholderRule
 
 
 def _scan(content: str, path: str = "src/config.py") -> list:

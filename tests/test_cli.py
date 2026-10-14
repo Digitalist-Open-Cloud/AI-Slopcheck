@@ -399,3 +399,20 @@ def test_scan_path_outside_repo_root_errors(tmp_path: Path) -> None:
 
     assert result.exit_code == 2
     assert "outside repo root" in result.output
+
+
+def test_rules_command_lists_ids_status_and_titles(tmp_path: Path) -> None:
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("rules:\n  regex_dos:\n    enabled: false\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["rules", "--config", str(config_file)])
+
+    assert result.exit_code == 0
+    lines = result.stdout.splitlines()
+    rows = {ln.split()[0]: ln.split(maxsplit=2)[1:] for ln in lines if ln.startswith("  ")}
+    headings = [ln for ln in lines if ln and not ln.startswith(" ")]
+    assert headings == sorted(headings) and "security" in headings
+    assert rows["regex_dos"] == ["off", "Potential ReDoS: regex with nested quantifiers"]
+    assert rows["duplicate_code"][0] == "on"
+    assert rows["bare_except_pass_js"][0] == "on"  # shares bare_except_pass config
+    assert rows["deep_nesting"][0] == "off"  # opt-in by default

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, HardcodedSecretConfig
-from doc_ai_slopcheck.rules.generic.hardcoded_secret import HardcodedSecretRule
+from doc_ai_slopcheck.rules.security.hardcoded_secret import HardcodedSecretRule
 
 
 def _scan(content: str, path: str = "src/config.py") -> list:

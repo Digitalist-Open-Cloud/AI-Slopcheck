@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, UnreachableCodeAfterReturnConfig
-from doc_ai_slopcheck.rules.generic.unreachable_code_after_return import (
+from doc_ai_slopcheck.rules.error_handling.unreachable_code_after_return import (
     UnreachableCodeAfterReturnRule,
 )
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ObviousPerfDrainConfig
-from doc_ai_slopcheck.rules.generic.obvious_perf_drain import ObviousPerfDrainRule
+from doc_ai_slopcheck.rules.maintainability.obvious_perf_drain import ObviousPerfDrainRule
 
 
 def _make_config() -> AppConfig:

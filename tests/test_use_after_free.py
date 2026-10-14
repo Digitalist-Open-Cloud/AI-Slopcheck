@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, RulesConfig, UseAfterFreeConfig
-from doc_ai_slopcheck.rules.generic.use_after_free import UseAfterFreeRule
+from doc_ai_slopcheck.rules.concurrency.use_after_free import UseAfterFreeRule
 
 
 def _scan(content: str, path: str = "src/main.c", enabled: bool = True) -> list:

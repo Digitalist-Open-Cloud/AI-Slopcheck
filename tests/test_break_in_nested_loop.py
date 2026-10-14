@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from doc_ai_slopcheck.config import AppConfig, BreakInNestedLoopConfig, RulesConfig
-from doc_ai_slopcheck.rules.generic.break_in_nested_loop import BreakInNestedLoopRule
+from doc_ai_slopcheck.rules.maintainability.break_in_nested_loop import BreakInNestedLoopRule
 
 
 @pytest.fixture

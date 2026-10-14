@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, DebugCodeLeftConfig
-from doc_ai_slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
+from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
 
 
 def _scan(content: str, path: str = "src/app.py") -> list:

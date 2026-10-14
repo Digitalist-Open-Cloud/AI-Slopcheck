@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, EarlyReturnOpportunityConfig
-from doc_ai_slopcheck.rules.generic.early_return_opportunity import EarlyReturnOpportunityRule
+from doc_ai_slopcheck.rules.maintainability.early_return_opportunity import (
+    EarlyReturnOpportunityRule,
+)
 
 
 def _make_config(enabled: bool = True) -> AppConfig:

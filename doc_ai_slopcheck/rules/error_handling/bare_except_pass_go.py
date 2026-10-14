@@ -22,6 +22,7 @@ GO_SILENT_RETURN_RE = re.compile(
 
 class BareExceptPassGoRule(Rule):
     rule_id = "bare_except_pass_go"
+    config_key = "bare_except_pass"
     title = "Silent error handler (Go)"
     supported_extensions = {".go"}
 

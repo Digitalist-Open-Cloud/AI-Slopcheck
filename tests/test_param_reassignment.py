@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ParamReassignmentConfig
-from doc_ai_slopcheck.rules.generic.param_reassignment import ParamReassignmentRule
+from doc_ai_slopcheck.rules.maintainability.param_reassignment import ParamReassignmentRule
 
 
 def _make_config(enabled: bool = True) -> AppConfig:

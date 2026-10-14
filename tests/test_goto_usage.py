@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, GotoUsageConfig
-from doc_ai_slopcheck.rules.generic.goto_usage import GotoUsageRule
+from doc_ai_slopcheck.rules.maintainability.goto_usage import GotoUsageRule
 
 
 def _scan(content: str, path: str = "src/main.go") -> list:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, JsJsonParseUnguardedConfig
-from doc_ai_slopcheck.rules.generic.js_json_parse_unguarded import JsJsonParseUnguardedRule
+from doc_ai_slopcheck.rules.error_handling.js_json_parse_unguarded import JsJsonParseUnguardedRule
 
 
 def _scan(content: str, path: str = "src/parser.ts") -> list:

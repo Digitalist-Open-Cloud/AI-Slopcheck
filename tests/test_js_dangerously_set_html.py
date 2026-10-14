@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, JsDangerouslySetHtmlConfig
-from doc_ai_slopcheck.rules.generic.js_dangerously_set_html import JsDangerouslySetHtmlRule
+from doc_ai_slopcheck.rules.security.js_dangerously_set_html import JsDangerouslySetHtmlRule
 
 _PROP = "dangerouslySetInnerHTML"
 

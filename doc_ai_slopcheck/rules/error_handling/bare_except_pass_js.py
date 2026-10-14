@@ -17,6 +17,7 @@ JS_EMPTY_CATCH_RE = re.compile(r"catch\s*(?:\([^)]*\))?\s*\{\s*\}")
 
 class BareExceptPassJsRule(Rule):
     rule_id = "bare_except_pass_js"
+    config_key = "bare_except_pass"
     title = "Silent exception handler (JS/TS/PHP)"
     supported_extensions = {".js", ".jsx", ".ts", ".tsx"} | PHP_EXTENSIONS
 

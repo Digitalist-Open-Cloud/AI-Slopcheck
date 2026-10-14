@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, RegexDosConfig
-from doc_ai_slopcheck.rules.generic.regex_dos import RegexDosRule
+from doc_ai_slopcheck.rules.security.regex_dos import RegexDosRule
 
 
 def _scan(content: str, path: str = "src/validate.py") -> list:

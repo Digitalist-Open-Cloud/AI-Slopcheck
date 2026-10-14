@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.dead_code_comment import DeadCodeCommentRule
+from doc_ai_slopcheck.rules.ai_slop.dead_code_comment import DeadCodeCommentRule
 
 
 def _scan(content: str, path: str = "src/main.py") -> list:

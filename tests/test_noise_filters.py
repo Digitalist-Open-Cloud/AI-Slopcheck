@@ -79,7 +79,7 @@ def test_test_code_is_downgraded_one_level(tmp_path: Path) -> None:
 
 
 def test_rules_that_skip_tests_follow_test_paths_setting() -> None:
-    from doc_ai_slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
+    from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
 
     def scan(path: str, config: AppConfig) -> list:
         return DebugCodeLeftRule().scan_file(

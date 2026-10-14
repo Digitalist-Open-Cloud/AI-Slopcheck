@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, ThreadUnsafeGlobalConfig
-from doc_ai_slopcheck.rules.generic.thread_unsafe_global import ThreadUnsafeGlobalRule
+from doc_ai_slopcheck.rules.concurrency.thread_unsafe_global import ThreadUnsafeGlobalRule
 
 
 def _scan(content: str, path: str = "worker.py") -> list:

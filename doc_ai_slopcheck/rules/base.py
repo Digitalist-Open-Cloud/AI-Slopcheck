@@ -15,6 +15,19 @@ class Rule(ABC):
     # Findings on lines that are only comments/docstrings are dropped unless the
     # rule is about comments itself (TODOs, plan IDs, chat bleed, ...).
     code_only: bool = True
+    # RulesConfig field holding this rule's settings, when shared with a sibling
+    # rule (e.g. bare_except_pass_js uses bare_except_pass). Default: rule_id.
+    config_key: str | None = None
+
+    @property
+    def category(self) -> str:
+        """The rules/ folder the rule lives in: ai_slop, security, error_handling, ..."""
+        return type(self).__module__.split(".")[-2]
+
+    def enabled(self, config: AppConfig) -> bool:
+        """Whether config turns this rule on; rules without a config section are on."""
+        section = getattr(config.rules, self.config_key or self.rule_id, None)
+        return section is None or section.enabled
 
     def applies_to_path(self, relative_path: str) -> bool:
         if self.supported_extensions is None:

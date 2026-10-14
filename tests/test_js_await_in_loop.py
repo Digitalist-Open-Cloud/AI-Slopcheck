@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, JsAwaitInLoopConfig
-from doc_ai_slopcheck.rules.generic.js_await_in_loop import JsAwaitInLoopRule
+from doc_ai_slopcheck.rules.idioms.js_await_in_loop import JsAwaitInLoopRule
 
 
 def _scan(content: str, path: str = "src/service.ts") -> list:

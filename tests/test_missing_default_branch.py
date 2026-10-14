@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, MissingDefaultBranchConfig
-from doc_ai_slopcheck.rules.generic.missing_default_branch import MissingDefaultBranchRule
+from doc_ai_slopcheck.rules.error_handling.missing_default_branch import MissingDefaultBranchRule
 
 
 def _make_config() -> AppConfig:

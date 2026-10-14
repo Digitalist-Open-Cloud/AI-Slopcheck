@@ -49,20 +49,17 @@ silently skipped.
 
 ## What It Catches
 
-| Category | Rules | Examples |
-| ---------- | :-----: | --------- |
-| **AI Detection** | 16 | Stub functions, instruction comments, plan/task IDs in comments, conversational bleed, identity refusals |
-| **Security** | 7 | Hardcoded secrets, SQL injection, XSS, weak hashing, obfuscated code |
-| **JavaScript / Node** | 11 | await-in-loop, unguarded JSON.parse, loose equality, React antipatterns |
-| **Go** | 3 | Ignored errors, missing defer, wrong error wrapping |
-| **PHP / Drupal** | 2 | Stub functions, raw `$_GET`/`$_POST` into eval/shell/SQL/echo; plus PHP support in debug (incl. devel `dpm`), SQL, obfuscation, empty catch, large functions, duplication |
-| **Python** | 1 | Mutable default arguments |
-| **Cross-Language** | 17 | Debug code, unreachable code, deep inheritance, dangerous shell in markdown |
-| **Data-Flow** | 4 | Contradictory null checks, lock safety, IDOR risk, thread-unsafe globals |
-| **Quality** | 9 | Large functions (>150 lines), copy-pasted code across files, plus opt-in deep nesting |
-| **API Contract** | 1 | Removed routes, deprecated endpoints |
-| **Repo-Specific** | 1 | Import boundary violations |
-| **Meta** | 1 | Unused suppression directives |
+Rules live in seven groups (`doc-ai-slopcheck rules` lists them all, with on/off):
+
+| Group | Rules | Examples |
+| ----- | :---: | -------- |
+| **ai_slop** | 18 | Stub functions (Python/JS/Go/PHP), chat bleed, identity refusals, plan/task IDs in comments, placeholders, hallucinated values, debug code left in |
+| **security** | 10 | Hardcoded secrets, SQL built from strings, XSS (`dangerouslySetInnerHTML`), raw `$_GET`/`$_POST` into eval/shell/SQL/echo, obfuscation, weak hashing, ReDoS |
+| **error_handling** | 11 | Empty catch/except, ignored Go errors, unhandled promises, unguarded `JSON.parse`, contradictory null checks, unreachable code |
+| **concurrency** | 6 | Locks without release, thread-unsafe globals, missing `defer`, timers without cleanup, use-after-free |
+| **maintainability** | 17 | Large functions (>150 lines), copy-pasted code across files, deep nesting, too many positional args, oversized classes |
+| **idioms** | 9 | Mutable defaults (Python), `==` and React antipatterns (JS/TS), `any` abuse, `SELECT *` |
+| **project** | 4 | Import boundaries, API contract breaks, undeclared imports, unused suppressions |
 
 ## Features
 
@@ -149,6 +146,7 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 | Command | Purpose |
 | --------- | --------- |
 | `doc-ai-slopcheck scan [paths]` | Scan files, write findings JSON |
+| `doc-ai-slopcheck rules` | List rule IDs, on/off (with the project config) and what each checks |
 | `doc-ai-slopcheck summary <file>` | Markdown summary |
 | `doc-ai-slopcheck github-annotations <file>` | GitHub workflow annotations |
 | `doc-ai-slopcheck sarif <file>` | SARIF v2.1.0 output |
@@ -224,7 +222,7 @@ rules:
 
 ```shell
 doc_ai_slopcheck/
-├── cli.py                 — 7 CLI commands
+├── cli.py                 — CLI commands
 ├── config.py              — Pydantic config models
 ├── models.py              — Finding, ScanResult (stable contract)
 ├── engine/
@@ -234,9 +232,14 @@ doc_ai_slopcheck/
 │   ├── repo_files.py      — File discovery and ignore patterns
 │   ├── suppression.py     — Inline ignore parser
 │   └── api_routes.py      — Route extraction for API snapshots
-├── rules/
-│   ├── generic/           — 73 cross-repo rules
-│   └── repo/              — 1 architecture rule
+├── rules/                 — one folder per group; base.py, registry.py
+│   ├── ai_slop/
+│   ├── security/
+│   ├── error_handling/
+│   ├── concurrency/
+│   ├── maintainability/
+│   ├── idioms/
+│   └── project/
 ├── output/
 │   ├── html_report.py     — Standalone HTML report with hotspot ranking
 │   ├── sarif.py           — SARIF v2.1.0

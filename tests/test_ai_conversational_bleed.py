@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.rules.generic.ai_conversational_bleed import AiConversationalBleedRule
+from doc_ai_slopcheck.rules.ai_slop.ai_conversational_bleed import AiConversationalBleedRule
 
 
 def _scan(content: str, path: str = "src/main.py") -> list:

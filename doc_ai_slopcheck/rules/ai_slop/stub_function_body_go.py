@@ -27,6 +27,7 @@ GO_PANIC_STUB_RE = re.compile(
 
 class StubFunctionBodyGoRule(Rule):
     rule_id = "stub_function_body_go"
+    config_key = "stub_function_body"
     title = "Stub function body (Go)"
     supported_extensions = {".go"}
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, RecursionWithoutLimitConfig
-from doc_ai_slopcheck.rules.generic.recursion_without_limit import RecursionWithoutLimitRule
+from doc_ai_slopcheck.rules.maintainability.recursion_without_limit import RecursionWithoutLimitRule
 
 
 def _make_config(enabled: bool = True) -> AppConfig:

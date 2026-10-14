@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig, UndeclaredImportConfig
-from doc_ai_slopcheck.rules.generic.undeclared_import import UndeclaredImportRule
+from doc_ai_slopcheck.rules.project.undeclared_import import UndeclaredImportRule
 
 
 def _make_config() -> AppConfig:
