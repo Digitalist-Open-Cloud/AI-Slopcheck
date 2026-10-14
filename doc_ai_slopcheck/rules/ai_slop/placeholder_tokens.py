@@ -11,6 +11,15 @@ from doc_ai_slopcheck.rules.base import Rule
 TOKEN_TEMPLATE = r"\b({tokens})\b"
 
 
+# Ticket references; UTF-8, SHA-256, ISO-8859, RFC-/CVE- numbers are not tickets.
+_TRACKED_RE = re.compile(
+    r"https?://\S*(?:/issues/\d|/pull/\d|/merge_requests/\d|/browse/[A-Z]|linear\.app"
+    r"|youtrack|trello\.com/c/|/tickets?/\d)"
+    r"|(?<![\w&])#\d{2,}\b"
+    r"|\b(?!(?:UTF|SHA|ISO|AES|RFC|CVE|HTTP|TLS)-)[A-Z][A-Z0-9]+-\d+\b"
+)
+
+
 class PlaceholderTokensRule(Rule):
     rule_id = "placeholder_tokens"
     code_only = False
@@ -69,6 +78,9 @@ class PlaceholderTokensRule(Rule):
 
         findings: list[Finding] = []
         for line_number, line in enumerate(content.splitlines(), start=1):
+            # A TODO with a ticket (URL, #123, JIRA-123) is tracked work, not slop.
+            if _TRACKED_RE.search(line):
+                continue
             for match in pattern.finditer(line):
                 token = match.group(1)
                 findings.append(
