@@ -1,0 +1,66 @@
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "doc-ai-slopcheck"
+version = "1.2.0"
+description = "Deterministic scanner for AI-style code failures. 72 rules for Python, JS/TS, Go, C/C++, SQL."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "Euraika", email = "info@euraika.net" }
+]
+keywords = ["static-analysis", "linter", "ai-code", "code-quality", "security", "github-actions"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+]
+
+dependencies = [
+  "pydantic>=2.8",
+  "PyYAML>=6.0",
+  "typer>=0.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck"
+Repository = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck"
+Issues = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/issues"
+
+[project.optional-dependencies]
+ast = [
+  "tree-sitter>=0.23",
+]
+github = [
+  "requests>=2.32",
+]
+
+[project.scripts]
+doc-ai-slopcheck = "doc_ai_slopcheck.cli:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+ruff = ">=0.6.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"doc_ai_slopcheck/cli.py" = ["B008"]  # typer requires function calls in argument defaults
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
