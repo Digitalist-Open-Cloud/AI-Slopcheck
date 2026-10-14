@@ -1,5 +1,8 @@
 # doc-ai-slopcheck
 
+[![PyPI](https://img.shields.io/pypi/v/doc-ai-slopcheck?color=blue)](https://pypi.org/project/doc-ai-slopcheck/)
+[![Python](https://img.shields.io/pypi/pyversions/doc-ai-slopcheck)](https://pypi.org/project/doc-ai-slopcheck/)
+[![Tests](https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/actions/workflows/tests.yml/badge.svg)](https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Rules](https://img.shields.io/badge/rules-75-blue)]()
 
@@ -7,31 +10,42 @@
 
 Digitalist fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer published.
 
-> Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, hallucinated placeholders, hardcoded secrets, and 70 more patterns across Python, JS/TS, PHP, Go, C/C++, SQL, and Markdown.
+> Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, copy-pasted code, plan/ticket IDs in comments, hallucinated placeholders, hardcoded secrets, and more across Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL, and Markdown.
 
 ---
 
 ## Install
 
+From [PyPI](https://pypi.org/project/doc-ai-slopcheck/) (Python 3.12+):
+
 ```bash
-pip install git+https://github.com/Digitalist-Open-Cloud/AI-Slopcheck.git
+pip install doc-ai-slopcheck
+# or as an isolated command-line tool
+pipx install doc-ai-slopcheck
 ```
 
 ## Quick Start
 
 ```bash
-# Scan a project
+# Scan a project (findings go to findings.json by default)
 doc-ai-slopcheck scan . --output findings.json --fail-on warning
 
-# View results
-doc-ai-slopcheck summary findings.json
+# Read the results
+doc-ai-slopcheck summary findings.json            # Markdown summary
+doc-ai-slopcheck html findings.json > report.html  # shareable HTML report
 
 # GitHub Security tab (SARIF)
-doc-ai-slopcheck sarif findings.json
+doc-ai-slopcheck sarif findings.json > results.sarif
 
 # Only scan changed files (CI)
 doc-ai-slopcheck scan . --changed-files git --fail-on warning
 ```
+
+Scanning a directory other than the current one works as expected: when you
+pass exactly one directory and no `--repo-root`, that directory becomes the
+repository root (paths and `.slopcheck.yaml` are resolved from there). Paths
+outside the repository root are rejected with an error instead of being
+silently skipped.
 
 ## What It Catches
 
@@ -54,15 +68,44 @@ doc-ai-slopcheck scan . --changed-files git --fail-on warning
 
 - **75 deterministic rules** — no LLM, no network, no randomness
 - **7 languages** — Python, JS/TS, PHP (incl. Drupal .module/.inc/.install/.theme), Go, C/C++, SQL, Markdown
+- **Cross-file duplication** — finds copy-pasted blocks within and across files, one finding per file pair
+- **Code-aware** — rules about code skip comments and docstrings; rules about comments (TODOs, plan IDs, chat bleed) read them
+- **Test code weighs less** — findings in tests, mocks and fixtures drop one severity level
+- **HTML report** — standalone, shareable page that opens with a "Where to start" ranking of the files with the most kinds of problem
 - **Inline suppression** — `# slopcheck: ignore[rule_id]`, or `# slopcheck: ignore-next[duplicate_code]` above a copied block
 - **SARIF output** — integrates with GitHub Security tab
-- **HTML report** — standalone, shareable page (`doc-ai-slopcheck html findings.json > report.html`)
 - **Diff-only mode** — scan only changed files (`--changed-files git`)
 - **Baselines** — suppress existing findings, fail only on new ones
 - **API snapshots** — detect removed API routes
 - **Tree-sitter** — optional AST context for better precision
 - **Threaded** — multi-core scanning (`--jobs N`)
 - **Confidence filtering** — `--min-confidence medium` for high-signal-only mode
+
+## Severity
+
+Findings are `error`, `warning` or `note`. `--fail-on` (default `error`) sets
+the level that makes `scan` exit with status 1.
+
+Findings in test and mock code (`tests/`, `mocks/`, `fixtures/`, `test_*.py`,
+`*.test.ts`, `*Test.php`, …) are lowered one level — error to warning, warning
+to note — and tagged `test-code`. Set `test_paths: []` in the config to treat
+test code like production code.
+
+SQL built from strings is an `error` when a value is spliced in, and a
+`warning` when only a table or column name is (`FROM $table … WHERE id = ?`),
+since names can't be bound as parameters.
+
+## PHP and Drupal
+
+`.php` files and Drupal's `.module`, `.inc`, `.install`, `.theme`, `.profile`
+and `.engine` files are scanned. Only the project's own code is scanned by
+default: `vendor/`, Drupal core (`web/core`, `docroot/core`, `html/core`),
+contrib modules/themes/profiles, `libraries/`, `sites/*/files`, scaffold copies
+(`default.settings.php`, `.ht.router.php`, `web/index.php`, …) and generated
+files (`.phpstorm.meta.php`, `sites/simpletest`) are ignored.
+
+PHP comments, docblocks, `#[Attributes]`, heredocs and inline HTML outside
+`<?php ?>` are told apart, so rules don't fire on documentation or templates.
 
 ## GitHub Actions
 
@@ -76,12 +119,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install git+https://github.com/Digitalist-Open-Cloud/AI-Slopcheck.git
+      - run: pip install doc-ai-slopcheck
       - run: doc-ai-slopcheck scan . --output findings.json --fail-on warning
-      - run: doc-ai-slopcheck github-annotations findings.json
-      - run: doc-ai-slopcheck sarif findings.json > results.sarif
-      - uses: github/codeql-action/upload-sarif@v3
+      - if: always()
+        run: |
+          doc-ai-slopcheck github-annotations findings.json
+          doc-ai-slopcheck sarif findings.json > results.sarif
+          doc-ai-slopcheck html findings.json > slopcheck-report.html
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
         with: { sarif_file: results.sarif }
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: slopcheck-report, path: slopcheck-report.html }
 ```
 
 ## Baselines (Incremental Adoption)
@@ -111,6 +161,9 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `--output` | `findings.json` | Findings JSON file; `-` for stdout |
+| `--repo-root` | scanned dir, else `.` | Root for relative paths and config lookup |
+| `--config` | `.slopcheck/config.yaml`, `.slopcheck.yaml` or `.slopcheck.yml` | Config file |
 | `--fail-on` | `error` | Exit 1 at severity: `none` / `note` / `warning` / `error` |
 | `--min-confidence` | `low` | Filter: `low` / `medium` / `high` |
 | `--baseline` | — | Suppress fingerprints from baseline file |
@@ -120,20 +173,45 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 
 ## Configuration
 
-Create `.slopcheck/config.yaml` (or `.slopcheck.yaml`):
+Create `.slopcheck/config.yaml` (or `.slopcheck.yaml`) in the repository root:
 
 ```yaml
+# Replaces the default list, so keep the defaults you still want
+# (vendor, node_modules, Drupal core/contrib, ...).
+ignored_paths:
+  - "vendor/**"
+  - "**/node_modules/**"
+  - "services/legacy-api/**"
+
+# Paths treated as test code (findings drop one severity level); [] disables.
+test_paths: ["*/tests/*", "*/mocks/*", "*Test.php", "test_*.py"]
+
 rules:
   # Disable a rule
   js_loose_equality:
     enabled: false
-  
+
+  # Tune thresholds
+  large_function:
+    max_lines: 150
+  duplicate_code:
+    min_lines: 10        # normalised lines (blank and comment lines excluded)
+
   # Enable an opt-in rule with custom threshold
   deep_nesting:
     enabled: true
     max_depth: 5
-  
-  # Configure detection
+
+  # Plan/ticket IDs in comments: add your own ID formats, e.g. decision records
+  plan_reference_comment:
+    patterns:
+      - '\b(?:Task|Phase|Milestone|Sprint)\s+#?\d+\b'
+      - '\bD-\d+\b'
+
+  # One class per file is enforced for JS/TS; opt in for Python
+  multiple_classes_per_file:
+    python: true
+
   hallucinated_placeholder:
     allowed_domains: ["example.com", "localhost"]
 ```
@@ -143,7 +221,7 @@ rules:
 For better precision (~5% improvement on string/comment context detection):
 
 ```bash
-pip install "doc-ai-slopcheck[ast] @ git+https://github.com/Digitalist-Open-Cloud/AI-Slopcheck.git"
+pip install "doc-ai-slopcheck[ast]"
 # Or manually:
 pip install tree-sitter-python tree-sitter-javascript tree-sitter-go tree-sitter-typescript
 ```
@@ -152,20 +230,23 @@ pip install tree-sitter-python tree-sitter-javascript tree-sitter-go tree-sitter
 
 ```
 doc_ai_slopcheck/
-├── cli.py                 — 6 CLI commands
-├── config.py              — 50+ Pydantic config models
+├── cli.py                 — 7 CLI commands
+├── config.py              — Pydantic config models
 ├── models.py              — Finding, ScanResult (stable contract)
 ├── engine/
-│   ├── scanner.py         — Threaded orchestrator
+│   ├── scanner.py         — Threaded orchestrator, comment and test-code filters
 │   ├── duplication.py     — Cross-file copy-paste detector
+│   ├── context_filter.py  — Comment/docstring/string detection (Python, C-style, PHP)
+│   ├── repo_files.py      — File discovery and ignore patterns
 │   ├── suppression.py     — Inline ignore parser
-│   └── context_filter.py  — String/comment detector
+│   └── api_routes.py      — Route extraction for API snapshots
 ├── parsers/
 │   └── treesitter.py      — Optional AST adapter
 ├── rules/
-│   ├── generic/           — 71 cross-repo rules
+│   ├── generic/           — 73 cross-repo rules
 │   └── repo/              — 1 architecture rule
 ├── output/
+│   ├── html_report.py     — Standalone HTML report with hotspot ranking
 │   ├── sarif.py           — SARIF v2.1.0
 │   ├── annotations.py     — GitHub annotations
 │   └── markdown_summary.py
@@ -183,6 +264,9 @@ poetry run pytest
 poetry run ruff check .
 poetry build
 ```
+
+Tests and ruff run on GitHub Actions for every push and pull request, on
+Python 3.12 and 3.13 (`.github/workflows/tests.yml`).
 
 ## License
 
