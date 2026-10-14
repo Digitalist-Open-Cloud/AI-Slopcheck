@@ -18,6 +18,7 @@ class RuleToggle(BaseModel):
 # config names that rules and tests import.
 StubFunctionBodyPhpConfig = RuleToggle
 PhpUserInputSinkConfig = RuleToggle
+NativeAlternativeConfig = RuleToggle
 AiInstructionCommentConfig = RuleToggle
 BareExceptPassConfig = RuleToggle
 AiConversationalBleedConfig = RuleToggle
@@ -235,6 +236,43 @@ class PlanReferenceCommentConfig(BaseModel):
     )
 
 
+class CommentEssayConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    min_comment_lines: int = 15  # comment/docstring lines before a function is an essay
+    max_ratio: float = 2.0  # ... and more than this many times its code lines
+
+
+class HistoryCommentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    # Case-insensitive regexes for comments narrating how the code used to be.
+    # Anchored to code subjects/verbs: bare "previously"/"tidigare" mostly
+    # describe runtime order ("previously set columns", "an earlier caller").
+    patterns: list[str] = Field(
+        default_factory=lambda: [
+            r"\b(?:this|it|we|the (?:code|function|method|route|query))\s+used to\b",
+            r"\bpreviously,?\s+(?:this|it|we|the (?:code|function|method|route|query))\b",
+            r"\bwas (?:replaced|renamed|rewritten)\b",
+            r"\bchanged (?:in|from) (?:v?\d|D-\d|PR|commit|the)\b",
+            r"\bthe old (?:code|version|implementation|behaviou?r)\b",
+            r"\b(?:until|fram till) (?:D-\d+|\d{4}-\d{2}-\d{2}|dess)\b",
+            # Swedish
+            r"\btidigare (?:form|version|implementation|kod|logik|beteende|variant)",
+            r"\b(?:var|låg|bodde|hette|fanns|gjordes|skickades) (?:här )?tidigare\b",
+            r"\bsom förut\b", r"\bändrat i\b", r"\bnumera\b",
+        ]
+    )
+
+
+class PassThroughWrapperConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False  # opt-in: framework providers/hooks look the same
+
+
 class DuplicateCodeConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -417,6 +455,12 @@ class RulesConfig(BaseModel):
     )
     plan_reference_comment: PlanReferenceCommentConfig = Field(
         default_factory=PlanReferenceCommentConfig
+    )
+    comment_essay: CommentEssayConfig = Field(default_factory=CommentEssayConfig)
+    history_comment: HistoryCommentConfig = Field(default_factory=HistoryCommentConfig)
+    native_alternative: NativeAlternativeConfig = Field(default_factory=NativeAlternativeConfig)
+    pass_through_wrapper: PassThroughWrapperConfig = Field(
+        default_factory=PassThroughWrapperConfig
     )
     duplicate_code: DuplicateCodeConfig = Field(
         default_factory=DuplicateCodeConfig

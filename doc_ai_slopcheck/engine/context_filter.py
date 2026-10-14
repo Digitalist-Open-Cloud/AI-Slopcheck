@@ -6,6 +6,7 @@ external dependency. Uses a single-pass character scanner.
 """
 from __future__ import annotations
 
+import ast
 import io
 import re
 import tokenize
@@ -277,3 +278,37 @@ def c_style_comments(content: str) -> list[tuple[int, str]]:
             first = line_of(m.start())
             out.extend((first + k, text) for k, text in enumerate(m.group(0).splitlines()))
     return out
+
+
+def python_comments(content: str) -> list[tuple[int, str]]:
+    """(line, text) for comments and module/class/function docstrings."""
+    out: list[tuple[int, str]] = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(content).readline):
+            if tok.type == tokenize.COMMENT:
+                out.append((tok.start[0], tok.string))
+        tree = ast.parse(content)
+    except (tokenize.TokenError, SyntaxError, ValueError):
+        return out
+    for node in ast.walk(tree):
+        if isinstance(
+            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+        ) and node.body:
+            first = node.body[0]
+            if (
+                isinstance(first, ast.Expr)
+                and isinstance(first.value, ast.Constant)
+                and isinstance(first.value.value, str)
+            ):
+                for offset, line in enumerate(first.value.value.splitlines()):
+                    out.append((first.lineno + offset, line))
+    return out
+
+
+def comments_for(content: str, ext: str) -> list[tuple[int, str]]:
+    """(line, text) for every comment line in a Python, PHP or C-style file."""
+    if ext == ".py":
+        return python_comments(content)
+    if ext in PHP_EXTENSIONS:
+        return php_comments(content)
+    return c_style_comments(content)

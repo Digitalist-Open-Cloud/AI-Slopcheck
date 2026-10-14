@@ -4,11 +4,13 @@ from doc_ai_slopcheck.rules.ai_slop.ai_conversational_bleed import AiConversatio
 from doc_ai_slopcheck.rules.ai_slop.ai_hardcoded_mocks import AiHardcodedMocksRule
 from doc_ai_slopcheck.rules.ai_slop.ai_identity_refusal import AiIdentityRefusalRule
 from doc_ai_slopcheck.rules.ai_slop.ai_instruction_comment import AiInstructionCommentRule
+from doc_ai_slopcheck.rules.ai_slop.comment_essay import CommentEssayRule
 from doc_ai_slopcheck.rules.ai_slop.console_log_in_production import ConsoleLogInProductionRule
 from doc_ai_slopcheck.rules.ai_slop.cross_language_idiom import CrossLanguageIdiomRule
 from doc_ai_slopcheck.rules.ai_slop.dead_code_comment import DeadCodeCommentRule
 from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
 from doc_ai_slopcheck.rules.ai_slop.hallucinated_placeholder import HallucinatedPlaceholderRule
+from doc_ai_slopcheck.rules.ai_slop.history_comment import HistoryCommentRule
 from doc_ai_slopcheck.rules.ai_slop.incomplete_error_message import IncompleteErrorMessageRule
 from doc_ai_slopcheck.rules.ai_slop.placeholder_tokens import PlaceholderTokensRule
 from doc_ai_slopcheck.rules.ai_slop.plan_reference_comment import PlanReferenceCommentRule
@@ -45,6 +47,7 @@ from doc_ai_slopcheck.rules.idioms.collection_modify_while_iterating import (
 )
 from doc_ai_slopcheck.rules.idioms.js_await_in_loop import JsAwaitInLoopRule
 from doc_ai_slopcheck.rules.idioms.js_loose_equality import JsLooseEqualityRule
+from doc_ai_slopcheck.rules.idioms.native_alternative import NativeAlternativeRule
 from doc_ai_slopcheck.rules.idioms.python_mutable_default import PythonMutableDefaultRule
 from doc_ai_slopcheck.rules.idioms.react_async_useeffect import ReactAsyncUseeffectRule
 from doc_ai_slopcheck.rules.idioms.react_index_key import ReactIndexKeyRule
@@ -73,6 +76,7 @@ from doc_ai_slopcheck.rules.maintainability.multiple_classes_per_file import (
 from doc_ai_slopcheck.rules.maintainability.obvious_perf_drain import ObviousPerfDrainRule
 from doc_ai_slopcheck.rules.maintainability.oversized_class import OversizedClassRule
 from doc_ai_slopcheck.rules.maintainability.param_reassignment import ParamReassignmentRule
+from doc_ai_slopcheck.rules.maintainability.pass_through_wrapper import PassThroughWrapperRule
 from doc_ai_slopcheck.rules.maintainability.recursion_without_limit import RecursionWithoutLimitRule
 from doc_ai_slopcheck.rules.maintainability.short_variable_name import ShortVariableNameRule
 from doc_ai_slopcheck.rules.project.api_contract_breaking import ApiContractBreakingRule
@@ -95,6 +99,8 @@ def build_rules() -> list[Rule]:
     """All rules, grouped like the rules/ folders. Order doesn't affect results."""
     return [
         # ai_slop
+        HistoryCommentRule(),
+        CommentEssayRule(),
         AiConversationalBleedRule(),
         AiHardcodedMocksRule(),
         AiIdentityRefusalRule(),
@@ -144,6 +150,7 @@ def build_rules() -> list[Rule]:
         ThreadUnsafeGlobalRule(),
         UseAfterFreeRule(),
         # maintainability
+        PassThroughWrapperRule(),
         AssignmentInConditionalRule(),
         BreakInNestedLoopRule(),
         DeepInheritanceRule(),
@@ -161,6 +168,7 @@ def build_rules() -> list[Rule]:
         RecursionWithoutLimitRule(),
         ShortVariableNameRule(),
         # idioms
+        NativeAlternativeRule(),
         CollectionModifyWhileIteratingRule(),
         JsAwaitInLoopRule(),
         JsLooseEqualityRule(),
