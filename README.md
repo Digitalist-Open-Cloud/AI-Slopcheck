@@ -55,7 +55,7 @@ silently skipped.
 | **Security** | 7 | Hardcoded secrets, SQL injection, XSS, weak hashing, obfuscated code |
 | **JavaScript / Node** | 11 | await-in-loop, unguarded JSON.parse, loose equality, React antipatterns |
 | **Go** | 3 | Ignored errors, missing defer, wrong error wrapping |
-| **PHP / Drupal** | 2 + shared | Stub functions, raw `$_GET`/`$_POST` into eval/shell/SQL/echo; plus PHP support in debug (incl. devel `dpm`), SQL, obfuscation, empty catch, large functions, duplication |
+| **PHP / Drupal** | 2 | Stub functions, raw `$_GET`/`$_POST` into eval/shell/SQL/echo; plus PHP support in debug (incl. devel `dpm`), SQL, obfuscation, empty catch, large functions, duplication |
 | **Python** | 1 | Mutable default arguments |
 | **Cross-Language** | 17 | Debug code, unreachable code, deep inheritance, dangerous shell in markdown |
 | **Data-Flow** | 4 | Contradictory null checks, lock safety, IDOR risk, thread-unsafe globals |
@@ -77,7 +77,6 @@ silently skipped.
 - **Diff-only mode** — scan only changed files (`--changed-files git`)
 - **Baselines** — suppress existing findings, fail only on new ones
 - **API snapshots** — detect removed API routes
-- **Tree-sitter** — optional AST context for better precision
 - **Threaded** — multi-core scanning (`--jobs N`)
 - **Confidence filtering** — `--min-confidence medium` for high-signal-only mode
 
@@ -216,16 +215,6 @@ rules:
     allowed_domains: ["example.com", "localhost"]
 ```
 
-## Tree-sitter (Optional)
-
-For better precision (~5% improvement on string/comment context detection):
-
-```bash
-pip install "doc-ai-slopcheck[ast]"
-# Or manually:
-pip install tree-sitter-python tree-sitter-javascript tree-sitter-go tree-sitter-typescript
-```
-
 ## Project Layout
 
 ```
@@ -240,8 +229,6 @@ doc_ai_slopcheck/
 │   ├── repo_files.py      — File discovery and ignore patterns
 │   ├── suppression.py     — Inline ignore parser
 │   └── api_routes.py      — Route extraction for API snapshots
-├── parsers/
-│   └── treesitter.py      — Optional AST adapter
 ├── rules/
 │   ├── generic/           — 73 cross-repo rules
 │   └── repo/              — 1 architecture rule
@@ -259,7 +246,7 @@ doc_ai_slopcheck/
 Requires Python 3.12+ and [Poetry](https://python-poetry.org/) 2.x.
 
 ```bash
-poetry install            # add --all-extras for tree-sitter and requests
+poetry install
 poetry run pytest
 poetry run ruff check .
 poetry build

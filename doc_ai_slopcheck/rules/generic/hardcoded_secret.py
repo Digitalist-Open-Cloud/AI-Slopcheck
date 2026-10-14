@@ -6,7 +6,6 @@ from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
-from doc_ai_slopcheck.parsers.treesitter import is_in_comment
 from doc_ai_slopcheck.rules.base import Rule
 
 # Key names that suggest a secret is being assigned
@@ -95,11 +94,6 @@ class HardcodedSecretRule(Rule):
                 continue
             # Skip lines that are error messages, log statements, or validation output.
             if _ERROR_LOG_RE.search(line):
-                continue
-            # Tree-sitter: skip matches inside comments
-            ext = Path(relative_path).suffix.lower()
-            ts_result = is_in_comment(content, ext, lineno, m.start())
-            if ts_result is True:
                 continue
             value = m.group(1)
             # Skip obvious placeholders

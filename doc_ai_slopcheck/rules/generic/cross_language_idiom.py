@@ -6,7 +6,6 @@ from pathlib import Path
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
-from doc_ai_slopcheck.parsers.treesitter import is_in_non_code as ts_is_in_non_code
 from doc_ai_slopcheck.rules.base import Rule
 
 # ---------------------------------------------------------------------------
@@ -119,17 +118,7 @@ class CrossLanguageIdiomRule(Rule):
                 m = pattern.search(line)
                 if not m:
                     continue
-                # Tree-sitter check (more accurate) with fallback
-                ext = Path(relative_path).suffix.lower()
-                ts_result = ts_is_in_non_code(
-                    content, ext, lineno, m.start()
-                )
-                if ts_result is True:
-                    continue
-                # Fallback: char-scanner if tree-sitter unavailable
-                if ts_result is None and is_in_non_code_context(
-                    line, m.start(), lang=lang
-                ):
+                if is_in_non_code_context(line, m.start(), lang=lang):
                     continue
                 evidence = m.group(0).strip()
                 findings.append(

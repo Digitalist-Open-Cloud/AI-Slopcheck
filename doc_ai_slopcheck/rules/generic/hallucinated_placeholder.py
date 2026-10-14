@@ -5,7 +5,6 @@ from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
-from doc_ai_slopcheck.parsers.treesitter import is_in_comment
 from doc_ai_slopcheck.rules.base import Rule
 
 # Fake credentials and placeholder tokens — require string context (quotes)
@@ -82,13 +81,6 @@ class HallucinatedPlaceholderRule(Rule):
             for pattern, category in patterns:
                 match = pattern.search(line)
                 if match:
-                    # Tree-sitter: skip if inside a comment
-                    ext = Path(relative_path).suffix.lower()
-                    ts_result = is_in_comment(
-                        content, ext, line_number, match.start()
-                    )
-                    if ts_result is True:
-                        continue
                     evidence = match.group(0)
                     # Skip allowed domains (e.g., example.com in docs)
                     if category == "fake URL" and any(

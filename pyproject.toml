@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "doc-ai-slopcheck"
-version = "1.2.2"
+version = "1.2.3"
 description = "Deterministic scanner for AI-style code failures. 75 rules for Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -32,14 +32,6 @@ dependencies = [
 Homepage = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck"
 Repository = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck"
 Issues = "https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/issues"
-
-[project.optional-dependencies]
-ast = [
-  "tree-sitter>=0.23",
-]
-github = [
-  "requests>=2.32",
-]
 
 [project.scripts]
 doc-ai-slopcheck = "doc_ai_slopcheck.cli:main"

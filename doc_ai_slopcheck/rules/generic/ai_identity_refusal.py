@@ -5,7 +5,6 @@ from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
-from doc_ai_slopcheck.parsers.treesitter import is_in_non_code
 from doc_ai_slopcheck.rules.base import Rule
 
 # Matches AI self-identification and refusal phrases.
@@ -65,13 +64,6 @@ class AiIdentityRefusalRule(Rule):
 
             match = AI_IDENTITY_RE.search(line)
             if match:
-                # Tree-sitter: skip if inside string/comment (JSDoc, etc.)
-                ext = Path(relative_path).suffix.lower()
-                ts_result = is_in_non_code(
-                    content, ext, line_number, match.start()
-                )
-                if ts_result is True:
-                    continue
                 evidence = match.group(0)
                 findings.append(
                     self.build_finding(
