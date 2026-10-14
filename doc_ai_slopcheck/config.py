@@ -19,6 +19,8 @@ class RuleToggle(BaseModel):
 StubFunctionBodyPhpConfig = RuleToggle
 PhpUserInputSinkConfig = RuleToggle
 NativeAlternativeConfig = RuleToggle
+TautologicalTestConfig = RuleToggle
+InnerHtmlAssignmentConfig = RuleToggle
 AiInstructionCommentConfig = RuleToggle
 BareExceptPassConfig = RuleToggle
 AiConversationalBleedConfig = RuleToggle
@@ -459,6 +461,10 @@ class RulesConfig(BaseModel):
     comment_essay: CommentEssayConfig = Field(default_factory=CommentEssayConfig)
     history_comment: HistoryCommentConfig = Field(default_factory=HistoryCommentConfig)
     native_alternative: NativeAlternativeConfig = Field(default_factory=NativeAlternativeConfig)
+    tautological_test: TautologicalTestConfig = Field(default_factory=TautologicalTestConfig)
+    inner_html_assignment: InnerHtmlAssignmentConfig = Field(
+        default_factory=InnerHtmlAssignmentConfig
+    )
     pass_through_wrapper: PassThroughWrapperConfig = Field(
         default_factory=PassThroughWrapperConfig
     )
@@ -520,7 +526,7 @@ class AppConfig(BaseModel):
             # Version control & environments
             ".git/**", ".venv/**", "**/.venv/**",
             # Build outputs
-            "dist/**", "**/dist/**",
+            "dist/**", "**/dist/**", "*.min.js", "**/*.min.js",
             "build/**", "**/build/**",
             ".next/**", "**/.next/**",
             # Dependencies

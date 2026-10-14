@@ -23,7 +23,9 @@ from doc_ai_slopcheck.rules.registry import build_rules
 _DOWNGRADE = {Severity.ERROR: Severity.WARNING, Severity.WARNING: Severity.NOTE}
 
 
-def _downgrade_test_code(findings: list[Finding], test_paths: list[str]) -> list[Finding]:
+def _downgrade_test_code(
+    findings: list[Finding], test_paths: list[str], keep: set[str]
+) -> list[Finding]:
     return [
         f.model_copy(
             update={
@@ -31,7 +33,7 @@ def _downgrade_test_code(findings: list[Finding], test_paths: list[str]) -> list
                 "tags": [*f.tags, "test-code"],
             }
         )
-        if is_ignored(f.location.path, test_paths)
+        if f.rule_id not in keep and is_ignored(f.location.path, test_paths)
         else f
         for f in findings
     ]
@@ -155,7 +157,8 @@ def scan_paths(
     )
     all_findings.extend(dup_findings)
     total_suppressed += dup_suppressed
-    all_findings = _downgrade_test_code(all_findings, config.test_paths)
+    keep = {rule.rule_id for rule in rules if not rule.downgrade_in_tests}
+    all_findings = _downgrade_test_code(all_findings, config.test_paths, keep)
 
     all_findings.sort(
         key=lambda item: (

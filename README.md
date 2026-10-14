@@ -4,9 +4,9 @@
 [![Python](https://img.shields.io/pypi/pyversions/doc-ai-slopcheck)](https://pypi.org/project/doc-ai-slopcheck/)
 [![Tests](https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/actions/workflows/tests.yml/badge.svg)](https://github.com/Digitalist-Open-Cloud/AI-Slopcheck/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Rules](https://img.shields.io/badge/rules-79-blue)]()
+[![Rules](https://img.shields.io/badge/rules-81-blue)]()
 
-**Deterministic scanner for AI-style code failures. 79 rules. No LLM. No backend.**
+**Deterministic scanner for AI-style code failures. 81 rules. No LLM. No backend.**
 
 Digitalist Open Cloud fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer public.
 
@@ -53,17 +53,17 @@ Rules live in seven groups (`doc-ai-slopcheck rules` lists them all, with on/off
 
 | Group | Rules | Examples |
 | ----- | :---: | -------- |
-| **ai_slop** | 20 | Stub functions (Python/JS/Go/PHP), chat bleed and emoji, identity refusals, plan/task IDs and history narrated in comments, comment essays, placeholders, hallucinated values, debug code left in |
-| **security** | 10 | Hardcoded secrets, SQL built from strings, XSS (`dangerouslySetInnerHTML`), raw `$_GET`/`$_POST` into eval/shell/SQL/echo, obfuscation, weak hashing, ReDoS |
+| **ai_slop** | 21 | Stub functions (Python/JS/Go/PHP), tests that cannot fail, chat bleed and emoji, identity refusals, plan/task IDs and history narrated in comments, comment essays, placeholders, hallucinated values, debug code left in |
+| **security** | 11 | Hardcoded secrets, SQL built from strings, XSS (`dangerouslySetInnerHTML`, dynamic `innerHTML`), raw `$_GET`/`$_POST` into eval/shell/SQL/echo, obfuscation, weak hashing, ReDoS |
 | **error_handling** | 11 | Empty catch/except, ignored Go errors, unhandled promises, unguarded `JSON.parse`, contradictory null checks, unreachable code |
 | **concurrency** | 6 | Locks without release, thread-unsafe globals, missing `defer`, timers without cleanup, use-after-free |
 | **maintainability** | 18 | Large functions (>150 lines), copy-pasted code across files, deep nesting, too many positional args, oversized classes, opt-in pass-through wrappers |
-| **idioms** | 10 | Dependencies or hacks where a built-in exists (`moment`, `uuid`, `JSON.parse(JSON.stringify())`, `pytz`, `six`), mutable defaults, `==` and React antipatterns, `any` abuse, `SELECT *` |
+| **idioms** | 10 | Dependencies or hacks where a built-in exists (`moment`, `uuid`, `JSON.parse(JSON.stringify())`, `pytz`, `six`), mutable defaults, `==` and React antipatterns, `any` / `as unknown as` / `@ts-ignore`, `SELECT *` |
 | **project** | 4 | Import boundaries, API contract breaks, undeclared imports, unused suppressions |
 
 ## Features
 
-- **79 deterministic rules** — no LLM, no network, no randomness
+- **81 deterministic rules** — no LLM, no network, no randomness
 - **7 languages** — Python, JS/TS, PHP (incl. Drupal .module/.inc/.install/.theme), Go, C/C++, SQL, Markdown
 - **Cross-file duplication** — finds copy-pasted blocks within and across files, one finding per file pair
 - **Prose slop** — comment essays, history narrated in comments, plan/ticket IDs, emoji in comments and logs

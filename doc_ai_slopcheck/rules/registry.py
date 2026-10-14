@@ -19,6 +19,7 @@ from doc_ai_slopcheck.rules.ai_slop.stub_function_body import StubFunctionBodyRu
 from doc_ai_slopcheck.rules.ai_slop.stub_function_body_go import StubFunctionBodyGoRule
 from doc_ai_slopcheck.rules.ai_slop.stub_function_body_js import StubFunctionBodyJsRule
 from doc_ai_slopcheck.rules.ai_slop.stub_function_body_php import StubFunctionBodyPhpRule
+from doc_ai_slopcheck.rules.ai_slop.tautological_test import TautologicalTestRule
 from doc_ai_slopcheck.rules.ai_slop.weak_function_name import WeakFunctionNameRule
 from doc_ai_slopcheck.rules.base import Rule
 from doc_ai_slopcheck.rules.concurrency.global_state_leak import GlobalStateLeakRule
@@ -86,6 +87,7 @@ from doc_ai_slopcheck.rules.project.unused_suppression import UnusedSuppressionR
 from doc_ai_slopcheck.rules.security.dangerous_shell_in_markdown import DangerousShellInMarkdownRule
 from doc_ai_slopcheck.rules.security.hardcoded_secret import HardcodedSecretRule
 from doc_ai_slopcheck.rules.security.idor_risk import IdorRiskRule
+from doc_ai_slopcheck.rules.security.inner_html_assignment import InnerHtmlAssignmentRule
 from doc_ai_slopcheck.rules.security.insecure_default import InsecureDefaultRule
 from doc_ai_slopcheck.rules.security.js_dangerously_set_html import JsDangerouslySetHtmlRule
 from doc_ai_slopcheck.rules.security.obfuscated_code import ObfuscatedCodeRule
@@ -99,6 +101,7 @@ def build_rules() -> list[Rule]:
     """All rules, grouped like the rules/ folders. Order doesn't affect results."""
     return [
         # ai_slop
+        TautologicalTestRule(),
         HistoryCommentRule(),
         CommentEssayRule(),
         AiConversationalBleedRule(),
@@ -120,6 +123,7 @@ def build_rules() -> list[Rule]:
         StubFunctionBodyRule(),
         WeakFunctionNameRule(),
         # security
+        InnerHtmlAssignmentRule(),
         DangerousShellInMarkdownRule(),
         HardcodedSecretRule(),
         IdorRiskRule(),

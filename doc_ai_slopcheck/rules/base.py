@@ -18,6 +18,9 @@ class Rule(ABC):
     # RulesConfig field holding this rule's settings, when shared with a sibling
     # rule (e.g. bare_except_pass_js uses bare_except_pass). Default: rule_id.
     config_key: str | None = None
+    # Findings in test code drop one severity level unless the rule is about
+    # tests themselves (e.g. tests that can't fail).
+    downgrade_in_tests: bool = True
 
     @property
     def category(self) -> str:
