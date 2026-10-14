@@ -11,7 +11,6 @@ from doc_ai_slopcheck.rules.base import Rule
 # Avoids matching inside strings is not possible without a full parser, but
 # integer literal 0 as divisor is almost always a bug.
 _DIV_BY_ZERO_RE = re.compile(r"[/%]\s*0(?!\s*[\w.])")
-_COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*|--)")
 
 
 class DivisionByZeroRiskRule(Rule):
@@ -33,8 +32,6 @@ class DivisionByZeroRiskRule(Rule):
 
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line) or not line.strip():
-                continue
             if _DIV_BY_ZERO_RE.search(line):
                 findings.append(
                     self.build_finding(

@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from doc_ai_slopcheck.config import DuplicateCodeConfig
-from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
+from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS
 from doc_ai_slopcheck.engine.suppression import is_suppressed, parse_suppressions
 from doc_ai_slopcheck.models import Confidence, Finding, Location, Severity
 from doc_ai_slopcheck.rules.base import Rule
@@ -21,10 +21,7 @@ from doc_ai_slopcheck.rules.base import Rule
 RULE_ID = "duplicate_code"
 TITLE = "Duplicated code block"
 
-_EXTENSIONS = frozenset({
-    ".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs", ".c", ".cc", ".cpp",
-    ".h", ".hpp", ".java", ".rb",
-}) | PHP_EXTENSIONS
+_EXTENSIONS = DEFAULT_CODE_EXTENSIONS - {".md"}
 _COMMENT_RE = re.compile(r"^(#|//|/\*|\*|\"\"\"|''')")
 _IMPORT_RE = re.compile(
     r"^(import\s|from\s.+\simport\b|\}?\s*from\s+['\"]|export\s.*\sfrom\s"

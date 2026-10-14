@@ -66,10 +66,6 @@ def test_skips_test_file() -> None:
     assert len(findings) == 0
 
 
-def test_skips_comment_line_py() -> None:
-    findings = _scan("# eval(code)\n")
-    assert len(findings) == 0
-
 
 def test_skips_unsupported_extension() -> None:
     rule = ObfuscatedCodeRule()

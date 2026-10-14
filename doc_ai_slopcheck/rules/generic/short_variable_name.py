@@ -14,7 +14,6 @@ _JS_ASSIGN_RE = re.compile(r"\b(?:let|const|var)\s+([a-z])\s*[=:,;)]")
 # Go: short variable declaration
 _GO_ASSIGN_RE = re.compile(r"\b([a-z])\s*:=")
 
-_COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*)")
 
 
 
@@ -40,9 +39,6 @@ class ShortVariableNameRule(Rule):
         findings: list[Finding] = []
 
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line):
-                continue
-
             name: str | None = None
             if suffix == ".py":
                 m = _PY_ASSIGN_RE.match(line)

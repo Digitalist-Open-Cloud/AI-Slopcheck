@@ -26,7 +26,6 @@ _THREADING_IMPORT_RE = re.compile(
     r")"
 )
 
-_COMMENT_RE = re.compile(r"^\s*#")
 
 # Known safe names that are intentionally module-level caches/registries
 _SAFE_NAME_RE = re.compile(
@@ -67,10 +66,6 @@ class ThreadUnsafeGlobalRule(Rule):
         findings: list[Finding] = []
 
         for lineno, line in enumerate(lines, start=1):
-            # Skip comments and blank lines
-            if not line.strip() or _COMMENT_RE.match(line):
-                continue
-
             # Only module-level (indent 0)
             if _is_inside_block(line):
                 continue

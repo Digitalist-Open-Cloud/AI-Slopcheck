@@ -6,6 +6,56 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
+class RuleToggle(BaseModel):
+    """Config for rules whose only setting is on/off."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+# Rules with no settings beyond `enabled`. Named aliases keep the per-rule
+# config names that rules and tests import.
+StubFunctionBodyPhpConfig = RuleToggle
+PhpUserInputSinkConfig = RuleToggle
+AiInstructionCommentConfig = RuleToggle
+BareExceptPassConfig = RuleToggle
+AiConversationalBleedConfig = RuleToggle
+AiIdentityRefusalConfig = RuleToggle
+IncompleteErrorMessageConfig = RuleToggle
+SqlStringConcatConfig = RuleToggle
+InsecureDefaultConfig = RuleToggle
+HardcodedSecretConfig = RuleToggle
+TypescriptAnyAbuseConfig = RuleToggle
+ReactIndexKeyConfig = RuleToggle
+ReactAsyncUseeffectConfig = RuleToggle
+PythonMutableDefaultConfig = RuleToggle
+GoMissingDeferConfig = RuleToggle
+GoErrorWrapConfig = RuleToggle
+CrossLanguageIdiomConfig = RuleToggle
+JsAwaitInLoopConfig = RuleToggle
+JsJsonParseUnguardedConfig = RuleToggle
+JsUnhandledPromiseConfig = RuleToggle
+JsLooseEqualityConfig = RuleToggle
+JsDangerouslySetHtmlConfig = RuleToggle
+SelectStarSqlConfig = RuleToggle
+WeakHashConfig = RuleToggle
+RegexDosConfig = RuleToggle
+ObfuscatedCodeConfig = RuleToggle
+GlobalStateLeakConfig = RuleToggle
+UnreachableCodeAfterReturnConfig = RuleToggle
+GotoUsageConfig = RuleToggle
+AssignmentInConditionalConfig = RuleToggle
+DebugCodeLeftConfig = RuleToggle
+ContradictoryNullCheckConfig = RuleToggle
+LockWithoutReleaseConfig = RuleToggle
+ThreadUnsafeGlobalConfig = RuleToggle
+RedundantSqlIndexConfig = RuleToggle
+UseAfterFreeConfig = RuleToggle
+BreakInNestedLoopConfig = RuleToggle
+ApiContractBreakingConfig = RuleToggle
+
+
 class PlaceholderTokensConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -30,18 +80,6 @@ class ForbiddenImportEdgesConfig(BaseModel):
     boundaries: list[BoundaryConfig] = Field(default_factory=list)
 
 
-class StubFunctionBodyPhpConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class PhpUserInputSinkConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class StubFunctionBodyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -49,30 +87,6 @@ class StubFunctionBodyConfig(BaseModel):
     excluded_function_patterns: list[str] = Field(
         default_factory=lambda: ["__init__", "setUp", "tearDown", "setUpClass", "tearDownClass"]
     )
-
-
-class AiInstructionCommentConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class BareExceptPassConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class AiConversationalBleedConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class AiIdentityRefusalConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class HallucinatedPlaceholderConfig(BaseModel):
@@ -93,12 +107,6 @@ class DeadCodeCommentConfig(BaseModel):
     excluded_paths: list[str] = Field(
         default_factory=lambda: ["docs/**", "examples/**", "*.md"]
     )
-
-
-class IncompleteErrorMessageConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class MissingDefaultBranchConfig(BaseModel):
@@ -127,59 +135,11 @@ class UndeclaredImportConfig(BaseModel):
     )
 
 
-class SqlStringConcatConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class InsecureDefaultConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class HardcodedSecretConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class TypescriptAnyAbuseConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class ReactIndexKeyConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class ReactAsyncUseeffectConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class GoIgnoredErrorConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     extra_allowed_patterns: list[str] = Field(default_factory=list)
-
-
-class PythonMutableDefaultConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class GoMissingDeferConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class ConsoleLogConfig(BaseModel):
@@ -189,52 +149,10 @@ class ConsoleLogConfig(BaseModel):
     allowed_methods: list[str] = Field(default_factory=lambda: ["error"])
 
 
-class GoErrorWrapConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class CrossLanguageIdiomConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class JsAwaitInLoopConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class JsJsonParseUnguardedConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class JsUnhandledPromiseConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class JsTimerNoCleanupConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False  # Opt-in: fire-and-forget setTimeout for UI feedback is legitimate
-
-
-class JsLooseEqualityConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class JsDangerouslySetHtmlConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class DeepNestingConfig(BaseModel):
@@ -251,40 +169,10 @@ class LargeFunctionConfig(BaseModel):
     max_lines: int = 150
 
 
-class SelectStarSqlConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class WeakHashConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class RegexDosConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class ObviousPerfDrainConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False  # Opt-in: 37K findings is too noisy without scope analysis
-
-
-class ObfuscatedCodeConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class GlobalStateLeakConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class CollectionModifyWhileIteratingConfig(BaseModel):
@@ -297,12 +185,6 @@ class DivisionByZeroRiskConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False
-
-
-class UnreachableCodeAfterReturnConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class ParamReassignmentConfig(BaseModel):
@@ -326,18 +208,6 @@ class ShortVariableNameConfig(BaseModel):
     allowed: list[str] = Field(
         default_factory=lambda: ["i", "j", "k", "x", "y", "z", "_", "e"]
     )
-
-
-class GotoUsageConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class AssignmentInConditionalConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class PlanReferenceCommentConfig(BaseModel):
@@ -396,28 +266,10 @@ class LargeAnonymousFunctionConfig(BaseModel):
     max_lines: int = 20
 
 
-class DebugCodeLeftConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class StaleCommentConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False  # Opt-in: very noisy
-
-
-class ContradictoryNullCheckConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class LockWithoutReleaseConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class IdorRiskConfig(BaseModel):
@@ -426,29 +278,11 @@ class IdorRiskConfig(BaseModel):
     enabled: bool = True  # Opt-in low-confidence; enabled by default for awareness
 
 
-class ThreadUnsafeGlobalConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class ManyPositionalArgsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
     max_positional: int = 6  # Raised from 4: real-world codebases commonly have 5-6 args
-
-
-class RedundantSqlIndexConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
-class UseAfterFreeConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class WeakFunctionNameConfig(BaseModel):
@@ -473,22 +307,10 @@ class OversizedClassConfig(BaseModel):
     max_methods: int = 10
 
 
-class BreakInNestedLoopConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
-
-
 class DangerousShellInMarkdownConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = False  # Opt-in: documentation showing dangerous commands is expected
-
-
-class ApiContractBreakingConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = True
 
 
 class RulesConfig(BaseModel):
@@ -678,7 +500,8 @@ class AppConfig(BaseModel):
     test_paths: list[str] = Field(
         default_factory=lambda: [
             "tests/*", "*/tests/*", "test/*", "*/test/*", "*/__tests__/*",
-            "*/mocks/*", "*/__mocks__/*", "*/fixtures/*", "*/testdata/*",
+            "spec/*", "*/spec/*", "mocks/*", "*/mocks/*", "*/__mocks__/*",
+            "fixtures/*", "*/fixtures/*", "*/testdata/*",
             "test_*.py", "*/test_*.py", "*_test.py", "*_test.go", "conftest.py",
             "*/conftest.py", "*.test.*", "*.spec.*", "*Test.php",
         ]

@@ -4,16 +4,11 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS, is_ignored
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
 _SELECT_STAR_RE = re.compile(r"SELECT\s+\*\s+FROM", re.IGNORECASE)
-_TEST_PATH_RE = re.compile(
-    r"(?:^|[\\/])(?:test|spec|__tests__|mock|fixture)s?[\\/]|\.(?:test|spec)\."
-)
-
-
 class SelectStarSqlRule(Rule):
     rule_id = "select_star_sql"
     title = "SELECT * used in SQL query"
@@ -31,7 +26,7 @@ class SelectStarSqlRule(Rule):
         if not rule_config.enabled or not self.applies_to_path(relative_path):
             return []
 
-        if _TEST_PATH_RE.search(relative_path):
+        if is_ignored(relative_path, config.test_paths):
             return []
 
         findings: list[Finding] = []

@@ -5,17 +5,9 @@ from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
-from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS, is_ignored
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
-
-_TEST_PATH_RE = re.compile(
-    r"(^|[\\/])(tests?|spec|__tests__)[\\/]|"
-    r"\.(test|spec)\.(py|js|jsx|ts|tsx)$|"
-    r"_test\.(py|go)$|"
-    r"test_[^/\\]+\.py$",
-    re.IGNORECASE,
-)
 
 _DEBUG_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bdebugger\b"), "debugger statement"),
@@ -40,7 +32,6 @@ _PHP_DEBUG_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(_PHP_CALL + r"debug_zval_dump\s*\("), "debug_zval_dump()"),
 ]
 
-_COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*)")
 
 
 class DebugCodeLeftRule(Rule):
@@ -60,7 +51,7 @@ class DebugCodeLeftRule(Rule):
         if not rule_config.enabled or not self.applies_to_path(relative_path):
             return []
 
-        if _TEST_PATH_RE.search(relative_path):
+        if is_ignored(relative_path, config.test_paths):
             return []
 
         patterns = _DEBUG_PATTERNS
@@ -70,8 +61,6 @@ class DebugCodeLeftRule(Rule):
             lang = "php"
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line):
-                continue
             for pattern, label in patterns:
                 m = pattern.search(line)
                 if m and not is_in_non_code_context(line, m.start(), lang):

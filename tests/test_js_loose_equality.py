@@ -56,11 +56,6 @@ def test_allows_strict_not_equal() -> None:
     assert len(findings) == 0
 
 
-def test_skips_comment_lines() -> None:
-    code = "// if (x == 0) this would fire\n"
-    findings = _scan(code)
-    assert len(findings) == 0
-
 
 def test_detects_in_js_file() -> None:
     code = "return a == b;\n"

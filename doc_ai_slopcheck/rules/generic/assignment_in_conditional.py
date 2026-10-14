@@ -10,7 +10,6 @@ from doc_ai_slopcheck.rules.base import Rule
 # Match `if (... = ...)` where = is not part of ==, !=, <=, >=
 # Strategy: find `if (` then look for a bare = not preceded by [!<>=] and not followed by =
 _ASSIGN_IN_IF_RE = re.compile(r"\bif\s*\([^)]*(?<![=!<>])=(?!=)[^)]*\)")
-_COMMENT_RE = re.compile(r"^\s*(?://|/\*|\*)")
 
 # Strip string and template literals to avoid matching `=` inside strings.
 # Handles: 'foo=bar', "foo=bar", `foo=${bar}`
@@ -41,9 +40,6 @@ class AssignmentInConditionalRule(Rule):
 
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line):
-                continue
-
             # Strip string literals so `=` inside strings doesn't trigger.
             # e.g., if (str.includes('key=value')) should not match.
             cleaned = _STRING_LITERAL_RE.sub('""', line)

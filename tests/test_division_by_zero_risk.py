@@ -44,10 +44,6 @@ def test_allows_division_by_variable() -> None:
     assert len(findings) == 0
 
 
-def test_skips_comment_line() -> None:
-    findings = _scan("# result = x / 0\n")
-    assert len(findings) == 0
-
 
 def test_detects_in_js_file() -> None:
     findings = _scan("const r = x / 0;\n", path="src/app.ts")

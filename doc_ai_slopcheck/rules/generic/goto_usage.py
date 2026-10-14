@@ -8,7 +8,6 @@ from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
 _GOTO_RE = re.compile(r"^\s*goto\s+\w+")
-_COMMENT_RE = re.compile(r"^\s*(?://|/\*|\*)")
 
 
 class GotoUsageRule(Rule):
@@ -30,8 +29,6 @@ class GotoUsageRule(Rule):
 
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line):
-                continue
             if _GOTO_RE.match(line):
                 findings.append(
                     self.build_finding(

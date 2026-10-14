@@ -3,21 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
+from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
-
-_CODE_EXTENSIONS = frozenset({
-    ".py", ".js", ".jsx", ".ts", ".tsx",
-    ".go", ".rs", ".c", ".cc", ".cpp", ".h", ".hpp",
-    ".java", ".rb", ".cs", ".swift",
-}) | PHP_EXTENSIONS
 
 
 class LargeFileRule(Rule):
     rule_id = "large_file"
     title = "File exceeds recommended line count"
-    supported_extensions = None  # checked per-extension in scan_file
+    supported_extensions = DEFAULT_CODE_EXTENSIONS - {".md"}
 
     def scan_file(
         self,
@@ -31,7 +25,7 @@ class LargeFileRule(Rule):
         if not rule_config.enabled:
             return []
 
-        if Path(relative_path).suffix.lower() not in _CODE_EXTENSIONS:
+        if not self.applies_to_path(relative_path):
             return []
 
         lines = content.splitlines()

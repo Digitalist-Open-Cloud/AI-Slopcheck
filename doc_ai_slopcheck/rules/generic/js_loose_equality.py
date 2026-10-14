@@ -10,7 +10,6 @@ from doc_ai_slopcheck.rules.base import Rule
 # Match == or != but NOT === or !==
 # Uses negative lookbehind/lookahead to avoid matching === and !==
 _LOOSE_EQ_RE = re.compile(r"(?<![=!<>])(?<!=)==(?!=)|(?<!!)!=(?!=)")
-_COMMENT_RE = re.compile(r"^\s*(?://|/\*|\*)")
 
 # Idiomatic JS: == null / != null checks both null and undefined. Same for == undefined.
 # These are intentional and widely accepted (even by ESLint eqeqeq with "smart" option).
@@ -38,9 +37,6 @@ class JsLooseEqualityRule(Rule):
 
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
-            if _COMMENT_RE.match(line):
-                continue
-
             # Allow idiomatic == null / != null checks (checks both null and undefined).
             if _NULLISH_CHECK_RE.search(line):
                 continue

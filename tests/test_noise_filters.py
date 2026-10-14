@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.engine.context_filter import non_code_lines
 from doc_ai_slopcheck.engine.scanner import scan_paths
@@ -74,3 +76,38 @@ def test_test_code_is_downgraded_one_level(tmp_path: Path) -> None:
     assert all(
         f.severity == "error" for f in result.findings if f.rule_id == "sql_string_concat"
     )
+
+
+def test_rules_that_skip_tests_follow_test_paths_setting() -> None:
+    from doc_ai_slopcheck.rules.generic.debug_code_left import DebugCodeLeftRule
+
+    def scan(path: str, config: AppConfig) -> list:
+        return DebugCodeLeftRule().scan_file(
+            repo_root=Path("."), relative_path=path, content="breakpoint()\n", config=config
+        )
+
+    assert scan("tests/test_foo.py", AppConfig()) == []
+    assert scan("spec/helper.py", AppConfig()) == []
+    custom = AppConfig(test_paths=["qa/*"])
+    assert scan("qa/check.py", custom) == []
+    assert len(scan("tests/test_foo.py", custom)) == 1  # no longer a test path
+
+
+@pytest.mark.parametrize(
+    ("path", "line", "rule_id"),
+    [
+        ("src/app.ts", "// if (x = 1) { }", "assignment_in_conditional"),
+        ("src/util.ts", "// if (x == 0) this would fire", "js_loose_equality"),
+        ("src/util.py", "# eval(code)", "obfuscated_code"),
+        # inside a docstring: invisible to the rule's own per-line check
+        ("src/debug.py", '"""\nbreakpoint()\n"""', "debug_code_left"),
+    ],
+)
+def test_code_rules_ignore_commented_out_code(
+    tmp_path: Path, path: str, line: str, rule_id: str
+) -> None:
+    """The scanner drops code-rule findings on comment lines, so rules don't
+    need their own comment checks."""
+    root = _repo(tmp_path, {path: line + "\n"})
+    result = scan_paths(repo_root=root, targets=None, config=AppConfig())
+    assert rule_id not in {f.rule_id for f in result.findings}

@@ -47,10 +47,6 @@ def test_detects_in_c_file() -> None:
     assert len(findings) == 1
 
 
-def test_skips_comment_line() -> None:
-    findings = _scan("// if (x = 1) { }\n")
-    assert len(findings) == 0
-
 
 def test_skips_unsupported_extension() -> None:
     rule = AssignmentInConditionalRule()

@@ -4,16 +4,12 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import is_ignored
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
 _LOOP_START_RE = re.compile(r"^\s*(for\s*[\s(]|while\s*\()")
 _AWAIT_RE = re.compile(r"\bawait\b")
-_TEST_PATH_RE = re.compile(
-    r"(?:^|[\\/])(?:test|spec|__tests__|mock|fixture)s?[\\/]|\.(?:test|spec)\."
-)
-
-
 class JsAwaitInLoopRule(Rule):
     rule_id = "js_await_in_loop"
     title = "Await inside loop body"
@@ -31,7 +27,7 @@ class JsAwaitInLoopRule(Rule):
         if not rule_config.enabled or not self.applies_to_path(relative_path):
             return []
 
-        if _TEST_PATH_RE.search(relative_path):
+        if is_ignored(relative_path, config.test_paths):
             return []
 
         lines = content.splitlines()

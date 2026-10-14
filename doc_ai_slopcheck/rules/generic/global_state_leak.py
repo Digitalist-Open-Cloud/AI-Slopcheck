@@ -85,8 +85,6 @@ class GlobalStateLeakRule(Rule):
         else:
             # JS/TS: flag let/var at column 0 (module level)
             for lineno, line in enumerate(lines, start=1):
-                if _COMMENT_RE.match(line):
-                    continue
                 if _JS_MUTABLE_RE.match(line):
                     findings.append(
                         self.build_finding(
