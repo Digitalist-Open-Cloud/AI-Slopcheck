@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from doc_ai_slopcheck.config import DuplicateCodeConfig
-from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS
+from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS, is_generated
 from doc_ai_slopcheck.engine.suppression import is_suppressed, parse_suppressions
 from doc_ai_slopcheck.models import Confidence, Finding, Location, Severity
 from doc_ai_slopcheck.rules.base import Rule
@@ -25,7 +25,7 @@ _EXTENSIONS = DEFAULT_CODE_EXTENSIONS - {".md"}
 _COMMENT_RE = re.compile(r"^(#|//|/\*|\*|\"\"\"|''')")
 _IMPORT_RE = re.compile(
     r"^(import\s|from\s.+\simport\b|\}?\s*from\s+['\"]|export\s.*\sfrom\s"
-    r"|use\s+[\\\w]|namespace\s)"  # PHP
+    r"|use\s+[\\\w]|namespace\s|<\?php\b|declare\s*\()"  # PHP file header
 )
 _WS_RE = re.compile(r"\s+")
 _MAX_LINE = 400  # minified/generated lines are not hand-written copies
@@ -43,7 +43,11 @@ def _normalise(content: str) -> list[tuple[int, str]]:
 
 
 def find_duplicates(
-    repo_root: Path, files: list[Path], config: DuplicateCodeConfig
+    repo_root: Path,
+    files: list[Path],
+    config: DuplicateCodeConfig,
+    *,
+    skip_generated: bool = False,
 ) -> tuple[list[Finding], int]:
     """Return (findings, suppressed_count)."""
     if not config.enabled:
@@ -59,6 +63,8 @@ def find_duplicates(
             continue
         rel = path.relative_to(repo_root).as_posix()
         content = path.read_text(encoding="utf-8", errors="ignore")
+        if skip_generated and is_generated(content):
+            continue
         lines = _normalise(content)
         if len(lines) < n:
             continue

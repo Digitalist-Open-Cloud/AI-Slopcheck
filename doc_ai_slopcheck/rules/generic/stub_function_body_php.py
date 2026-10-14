@@ -11,7 +11,11 @@ from doc_ai_slopcheck.rules.base import Rule
 _FUNC_RE = re.compile(r"\bfunction\s+&?\s*(\w+)\s*\(")
 _COMMENT_RE = re.compile(r"//[^\n]*|#(?!\[)[^\n]*|/\*.*?\*/", re.DOTALL)
 _STRING_RE = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'")
-_TODO_RE = re.compile(r"\b(?:TODO|FIXME|implement(?:ed|ation)?|stub|placeholder)\b", re.I)
+_TODO_RE = re.compile(
+    r"\b(?:TODO|FIXME)\b|@todo|\bnot\s+(?:yet\s+)?implemented\b|\bimplement\s+(?:me|this)\b"
+    r"|\bstub\b",
+    re.I,
+)
 _TRIVIAL_RETURN_RE = re.compile(
     r"^return\s*(?:null|false|true|\[\]|array\(\)|''|\"\"|0)?\s*;$", re.I
 )

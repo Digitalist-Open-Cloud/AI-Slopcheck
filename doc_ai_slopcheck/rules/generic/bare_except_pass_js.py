@@ -12,9 +12,7 @@ from doc_ai_slopcheck.rules.base import Rule
 JS_CATCH_RE = re.compile(r"^\s*\}?\s*catch\s*(?:\([^)]*\))?\s*\{\s*$")
 
 # Matches empty catch body: catch (...) { } on one line
-JS_EMPTY_CATCH_RE = re.compile(
-    r"catch\s*(?:\([^)]*\))?\s*\{\s*(?:/\*.*?\*/\s*)?\}"
-)
+JS_EMPTY_CATCH_RE = re.compile(r"catch\s*(?:\([^)]*\))?\s*\{\s*\}")
 
 
 class BareExceptPassJsRule(Rule):
@@ -81,7 +79,8 @@ class BareExceptPassJsRule(Rule):
     def _extract_catch_body(
         lines: list[str], catch_idx: int
     ) -> list[str] | None:
-        """Extract non-blank, non-comment body lines from a catch block."""
+        """Extract non-blank body lines from a catch block. Comments count: an
+        explained empty catch (`// Ignore invalid URLs.`) is intentional."""
         # Find the last { on the catch line — that's the catch block opener
         catch_line = lines[catch_idx]
         last_brace = catch_line.rfind("{")
@@ -103,7 +102,7 @@ class BareExceptPassJsRule(Rule):
                 break
 
             stripped = lines[k].strip()
-            if stripped and not stripped.startswith("//"):
+            if stripped:
                 body.append(stripped)
 
         return body

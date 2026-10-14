@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -42,7 +43,7 @@ class JsLooseEqualityRule(Rule):
                 continue
 
             m = _LOOSE_EQ_RE.search(line)
-            if m:
+            if m and not is_in_non_code_context(line, m.start(), "js"):
                 evidence = line.strip()
                 op = m.group(0)
                 findings.append(

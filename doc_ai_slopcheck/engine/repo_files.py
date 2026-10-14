@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -26,6 +27,23 @@ DEFAULT_CODE_EXTENSIONS = PHP_EXTENSIONS | {
     ".hpp",
     ".md",
 }
+
+
+# Header markers of generated code (OpenAPI/protobuf clients, Go `Code
+# generated ... DO NOT EDIT`, Facebook-style @generated). Findings there can't
+# be fixed by hand.
+_GENERATED_RE = re.compile(r"@generated\b|\bDO NOT EDIT\b|\bauto-?generated\b", re.IGNORECASE)
+_HEADER_LINES = 40
+
+
+# Bundled third-party files keep a /*! license banner as their first line.
+_VENDORED_RE = re.compile(r"\A\s*/\*!")
+
+
+def is_generated(content: str) -> bool:
+    """Generated (header marker) or vendored (/*! banner) code nobody edits here."""
+    header = "\n".join(content.split("\n", _HEADER_LINES)[:_HEADER_LINES])
+    return bool(_GENERATED_RE.search(header) or _VENDORED_RE.match(content))
 
 
 def is_ignored(relative_path: str, ignored_patterns: list[str]) -> bool:

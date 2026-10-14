@@ -11,6 +11,21 @@ _THEN_RE = re.compile(r"\.then\s*\(")
 _CATCH_RE = re.compile(r"\.catch\s*\(")
 
 
+# Statement text before the first .then: awaited or returned promises reject
+# into the caller, which handles them.
+_HANDED_ON_RE = re.compile(r"\bawait\b|\breturn\b|=>\s*$|=>\s*[\w(]")
+_STATEMENT_END_RE = re.compile(r"[;{},]\s*$")  # , ends object entries and arguments
+
+
+def _caller_handles(lines: list[str], lineno: int) -> bool:
+    start = lineno - 1
+    while start > 0 and lineno - start < 5 and not _STATEMENT_END_RE.search(lines[start - 1]):
+        start -= 1
+    statement = "\n".join(lines[start:lineno])
+    before = statement[: statement.find(".then")]  # up to the chain's first .then
+    return bool(_HANDED_ON_RE.search(before))
+
+
 class JsUnhandledPromiseRule(Rule):
     rule_id = "js_unhandled_promise"
     title = "Unhandled promise rejection (.then without .catch)"
@@ -40,7 +55,7 @@ class JsUnhandledPromiseRule(Rule):
             window = lines[lineno - 1 : end]
             combined = " ".join(window)
 
-            if not _CATCH_RE.search(combined):
+            if not _CATCH_RE.search(combined) and not _caller_handles(lines, lineno):
                 evidence = line.strip()
                 findings.append(
                     self.build_finding(

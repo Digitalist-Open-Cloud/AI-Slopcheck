@@ -17,7 +17,7 @@ def _scan(content: str, path: str = "src/service.ts") -> list:
 
 
 def test_detects_function_return_null():
-    code = "function getData() {\n  return null;\n}\n"
+    code = "function getData() {\n  // TODO: fetch from the API\n  return null;\n}\n"
     findings = _scan(code)
     assert len(findings) == 1
     assert "getData" in findings[0].message
@@ -42,7 +42,7 @@ def test_detects_empty_function_body():
 
 
 def test_detects_return_undefined():
-    code = "function process() {\n  return undefined;\n}\n"
+    code = "function process() {\n  // not implemented yet\n  return undefined;\n}\n"
     findings = _scan(code)
     assert len(findings) == 1
 
@@ -66,6 +66,12 @@ def test_detects_async_arrow():
 
 
 def test_detects_export_function():
-    code = "export function getUser() {\n  return null;\n}\n"
+    code = "export function getUser() {\n  // @todo\n  return null;\n}\n"
     findings = _scan(code)
     assert len(findings) == 1
+
+
+def test_lone_trivial_return_without_todo_is_not_a_stub():
+    """Next.js generateStaticParams() { return [] } and similar are deliberate."""
+    code = "export async function generateStaticParams() {\n  return [];\n}\n"
+    assert _scan(code, path="src/app/page.tsx") == []

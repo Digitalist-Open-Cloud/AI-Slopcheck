@@ -7,7 +7,7 @@ import tokenize
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.context_filter import php_comments
+from doc_ai_slopcheck.engine.context_filter import c_style_comments, php_comments
 from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
@@ -18,8 +18,9 @@ _DIRECTIVE_RE = re.compile(
     r"eslint-disable.*|@ts-\S+|slopcheck:.*|NOSONAR.*)",
     re.IGNORECASE,
 )
+# In PHP files, D7/D8/D10 are Drupal major versions, not plan IDs.
+_DRUPAL_VERSION_RE = re.compile(r"^D(?:[5-9]|1[0-3])$")
 _URL_RE = re.compile(r"\b\w+://\S+")
-_JS_COMMENT_RE = re.compile(r"(?<![:\w\"'\\])//(.*)|/\*(.*?)\*/", re.DOTALL)
 _EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
 
 
@@ -47,14 +48,6 @@ def _python_comments(content: str) -> list[tuple[int, str]]:
     return out
 
 
-def _js_comments(content: str) -> list[tuple[int, str]]:
-    out: list[tuple[int, str]] = []
-    for m in _JS_COMMENT_RE.finditer(content):
-        start = content.count("\n", 0, m.start()) + 1
-        for offset, line in enumerate((m.group(1) or m.group(2) or "").splitlines()):
-            out.append((start + offset, line))
-    return out
-
 
 class PlanReferenceCommentRule(Rule):
     rule_id = "plan_reference_comment"
@@ -77,20 +70,22 @@ class PlanReferenceCommentRule(Rule):
         patterns = [re.compile(p) for p in rule_config.patterns]
         ignore = set(rule_config.ignore)
         is_py = relative_path.endswith(".py")
+        is_php = Path(relative_path).suffix.lower() in PHP_EXTENSIONS
         if is_py:
             comments = _python_comments(content)
-        elif Path(relative_path).suffix.lower() in PHP_EXTENSIONS:
+        elif is_php:
             comments = php_comments(content)
         else:
-            comments = _js_comments(content)
+            comments = c_style_comments(content)
 
         hits: list[tuple[int, str, str]] = []  # (line, id, comment)
         for line, text in comments:
             text = _URL_RE.sub("", _DIRECTIVE_RE.sub("", text))
             for pattern in patterns:
                 for m in pattern.finditer(text):
-                    if m.group(0) not in ignore:
-                        hits.append((line, m.group(0), text.strip(" #*/")))
+                    if m.group(0) in ignore or (is_php and _DRUPAL_VERSION_RE.match(m.group(0))):
+                        continue
+                    hits.append((line, m.group(0), text.strip(" #*/")))
         if not hits:
             return []
 

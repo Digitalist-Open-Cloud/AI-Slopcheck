@@ -10,6 +10,9 @@ from doc_ai_slopcheck.rules.base import Rule
 
 _LOOP_START_RE = re.compile(r"^\s*(for\s*[\s(]|while\s*\()")
 _AWAIT_RE = re.compile(r"\bawait\b")
+# Polling: `for await` over an async iterator, or an awaited sleep, is meant to be sequential.
+_FOR_AWAIT_RE = re.compile(r"^\s*for\s+await\b")
+_DELAY_RE = re.compile(r"\b(?:setTimeout|sleep|delay)\s*\(")
 class JsAwaitInLoopRule(Rule):
     rule_id = "js_await_in_loop"
     title = "Await inside loop body"
@@ -34,7 +37,7 @@ class JsAwaitInLoopRule(Rule):
         findings: list[Finding] = []
 
         for lineno, line in enumerate(lines, start=1):
-            if not _AWAIT_RE.search(line):
+            if not _AWAIT_RE.search(line) or _DELAY_RE.search(line):
                 continue
 
             # Look up to 10 lines above for a loop start
@@ -47,7 +50,7 @@ class JsAwaitInLoopRule(Rule):
                 ctx_indent = len(ctx_line) - len(stripped)
                 if ctx_indent >= current_indent:
                     continue
-                if _LOOP_START_RE.match(ctx_line):
+                if _LOOP_START_RE.match(ctx_line) and not _FOR_AWAIT_RE.match(ctx_line):
                     evidence = line.strip()
                     findings.append(
                         self.build_finding(

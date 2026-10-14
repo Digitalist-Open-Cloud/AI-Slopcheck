@@ -219,7 +219,9 @@ class PlanReferenceCommentConfig(BaseModel):
     patterns: list[str] = Field(
         default_factory=lambda: [
             r"\b(?:Task|Phase|Milestone|Sprint|Fas|Uppgift)\s+#?[A-Z]?\d+(?:\.\d+)*\b",
-            r"\b(?!V\d)[A-Z]\d{1,2}\b",  # short plan IDs; skips versions and lint codes
+            # Short plan IDs; skips versions (V2), lint codes (B023), character
+            # ranges ([A-Z0-9]) and dotted names (Guideline1_1.H37).
+            r"(?<![-.\w])(?!V\d)[A-Z]\d{1,2}\b(?!-)",
         ]
     )
     # Real-world terms that look like plan IDs.
@@ -488,13 +490,16 @@ class AppConfig(BaseModel):
             "**/default.settings.php", "**/sites/example.*.php", "**/.ht.router.php",
             "web/index.php", "web/update.php", "web/autoload.php",
             "**/sites/simpletest/**", "**/.phpstorm.meta.php",
-            # Generated code
-            "**/generated/**",
+            # Generated code (incl. graphql-codegen client-preset output)
+            "**/generated/**", "**/__generated__/**", "**/*.generated.*",
+            "**/gql/graphql.ts", "**/gql/gql.ts", "**/gql/fragment-masking.ts",
             # Agent/CI artifacts
             "**/.claude/**", "**/worktrees/**",
             "**/swarm/runs/**", "**/agents/swarm/**",
         ]
     )
+    # Skip files whose header says they are generated (@generated, DO NOT EDIT).
+    skip_generated: bool = True
     # Findings in test and mock code drop one severity level (error -> warning,
     # warning -> note). Set to [] to treat test code like production code.
     test_paths: list[str] = Field(
@@ -503,7 +508,7 @@ class AppConfig(BaseModel):
             "spec/*", "*/spec/*", "mocks/*", "*/mocks/*", "*/__mocks__/*",
             "fixtures/*", "*/fixtures/*", "*/testdata/*",
             "test_*.py", "*/test_*.py", "*_test.py", "*_test.go", "conftest.py",
-            "*/conftest.py", "*.test.*", "*.spec.*", "*Test.php",
+            "*/conftest.py", "*.test.*", "*.spec.*", "*Test.php", "*.stories.*",
         ]
     )
     rules: RulesConfig = Field(default_factory=RulesConfig)
