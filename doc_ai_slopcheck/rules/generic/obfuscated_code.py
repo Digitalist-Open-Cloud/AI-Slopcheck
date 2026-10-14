@@ -22,6 +22,8 @@ _B64_DECODE_RE = re.compile(
     r"|\b(?:base64_decode|gzinflate|gzuncompress|gzdecode|str_rot13)\s*\("  # PHP
 )
 # Hex escape sequences -- flag if more than 3 occur on one line
+# Hex escapes inside a regex are pattern syntax, not hidden code.
+_REGEX_CONTEXT_RE = re.compile(r"\bpreg_\w+\s*\(|\bRegExp\b|\bre\.\w+\s*\(")
 _HEX_ESCAPE_RE = re.compile(r"\\x[0-9a-fA-F]{2}")
 # Python bytes literals hold binary data (file signatures), not hidden code.
 _BYTES_LITERAL_RE = re.compile(r"\b[bB][rR]?(?:\"[^\"]*\"|'[^']*')")
@@ -78,7 +80,9 @@ class ObfuscatedCodeRule(Rule):
                     if eval_re.search(line)
                     else "Function() constructor"
                 )
-            elif len(_HEX_ESCAPE_RE.findall(_BYTES_LITERAL_RE.sub("", line))) > 6:
+            elif not _REGEX_CONTEXT_RE.search(line) and (
+                len(_HEX_ESCAPE_RE.findall(_BYTES_LITERAL_RE.sub("", line))) > 6
+            ):
                 # Raised from 3 to 6 — standard string encoding often has a few hex escapes.
                 label = "dense hex escape sequences"
 

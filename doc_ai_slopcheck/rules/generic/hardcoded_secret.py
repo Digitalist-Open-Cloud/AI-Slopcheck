@@ -27,6 +27,7 @@ _PLACEHOLDER_RE = re.compile(
 )
 
 # camelCase or separated words: 'addAuthTokenNonce', 'confirm_reset'.
+_CONCAT_RE = re.compile(r"\s[.+]\s")
 _LABEL_RE = re.compile(r"^[a-z]+(?:[A-Z][a-z]+)+$|^[A-Za-z]+(?:[_.-][A-Za-z]+)+$")
 
 # Shannon entropy threshold: values above this are "high entropy" (more suspicious)
@@ -107,6 +108,9 @@ class HardcodedSecretRule(Rule):
                 continue
             # Identifier-shaped values are labels (nonce, form field or setting
             # names), and so is a value equal to the key word ('password').
+            # 'api?secret=' . $_ENV['TOKEN']: the "value" is code between strings.
+            if _CONCAT_RE.search(value):
+                continue
             key_word = re.split(r"\s*[=:]", m.group(0))[0]
             if _LABEL_RE.match(value) or value.lower() == key_word.lower():
                 continue

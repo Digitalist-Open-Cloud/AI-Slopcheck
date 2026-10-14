@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "doc-ai-slopcheck"
-version = "1.2.3"
+version = "1.2.4"
 description = "Deterministic scanner for AI-style code failures. 75 rules for Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL."
 readme = "README.md"
 requires-python = ">=3.12"

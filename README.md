@@ -8,7 +8,7 @@
 
 **Deterministic scanner for AI-style code failures. 75 rules. No LLM. No backend.**
 
-Digitalist fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer published.
+Digitalist Open Cloud fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer public.
 
 > Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, copy-pasted code, plan/ticket IDs in comments, hallucinated placeholders, hardcoded secrets, and more across Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL, and Markdown.
 
@@ -18,7 +18,7 @@ Digitalist fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) 
 
 From [PyPI](https://pypi.org/project/doc-ai-slopcheck/) (Python 3.12+):
 
-```bash
+```shell
 pip install doc-ai-slopcheck
 # or as an isolated command-line tool
 pipx install doc-ai-slopcheck
@@ -26,7 +26,7 @@ pipx install doc-ai-slopcheck
 
 ## Quick Start
 
-```bash
+```shell
 # Scan a project (findings go to findings.json by default)
 doc-ai-slopcheck scan . --output findings.json --fail-on warning
 
@@ -50,7 +50,7 @@ silently skipped.
 ## What It Catches
 
 | Category | Rules | Examples |
-|----------|:-----:|---------|
+| ---------- | :-----: | --------- |
 | **AI Detection** | 16 | Stub functions, instruction comments, plan/task IDs in comments, conversational bleed, identity refusals |
 | **Security** | 7 | Hardcoded secrets, SQL injection, XSS, weak hashing, obfuscated code |
 | **JavaScript / Node** | 11 | await-in-loop, unguarded JSON.parse, loose equality, React antipatterns |
@@ -135,7 +135,7 @@ jobs:
 
 ## Baselines (Incremental Adoption)
 
-```bash
+```shell
 # First run: baseline existing findings
 doc-ai-slopcheck scan . --output findings.json --fail-on none
 doc-ai-slopcheck create-baseline findings.json
@@ -147,7 +147,7 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 ## CLI Reference
 
 | Command | Purpose |
-|---------|---------|
+| --------- | --------- |
 | `doc-ai-slopcheck scan [paths]` | Scan files, write findings JSON |
 | `doc-ai-slopcheck summary <file>` | Markdown summary |
 | `doc-ai-slopcheck github-annotations <file>` | GitHub workflow annotations |
@@ -159,7 +159,7 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 ### Key `scan` Options
 
 | Option | Default | Description |
-|--------|---------|-------------|
+| -------- | --------- | ------------- |
 | `--output` | `findings.json` | Findings JSON file; `-` for stdout |
 | `--repo-root` | scanned dir, else `.` | Root for relative paths and config lookup |
 | `--config` | `.slopcheck/config.yaml`, `.slopcheck.yaml` or `.slopcheck.yml` | Config file |
@@ -181,6 +181,11 @@ ignored_paths:
   - "vendor/**"
   - "**/node_modules/**"
   - "services/legacy-api/**"
+
+# Generated files (header says @generated, DO NOT EDIT or auto-generated) and
+# bundled third-party files (first line is a /*! license banner) are skipped;
+# set false to scan them.
+skip_generated: true
 
 # Paths treated as test code (findings drop one severity level); [] disables.
 test_paths: ["*/tests/*", "*/mocks/*", "*Test.php", "test_*.py"]
@@ -217,7 +222,7 @@ rules:
 
 ## Project Layout
 
-```
+```shell
 doc_ai_slopcheck/
 ├── cli.py                 — 7 CLI commands
 ├── config.py              — Pydantic config models
@@ -245,7 +250,7 @@ doc_ai_slopcheck/
 
 Requires Python 3.12+ and [Poetry](https://python-poetry.org/) 2.x.
 
-```bash
+```shell
 poetry install
 poetry run pytest
 poetry run ruff check .
@@ -257,4 +262,4 @@ Python 3.12 and 3.13 (`.github/workflows/tests.yml`).
 
 ## License
 
-[MIT](LICENSE) — Euraika 2026. Fork maintained by Digitalist.
+[MIT](LICENSE) — Euraika 2026. Fork maintained by Digitalist Open Cloud.

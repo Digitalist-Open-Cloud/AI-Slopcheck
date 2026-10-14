@@ -14,6 +14,9 @@ from doc_ai_slopcheck.rules.base import Rule
 _CALL_RE = re.compile(r"\b(\w+)\s*\(([^)]*)\)")
 
 # SQL keywords that look like function calls but aren't (VALUES(a,b,c), INSERT, etc.)
+_DEFINITION_RE = re.compile(r"\b(?:def|function|fn|func)\s+&?\s*$")
+_NOT_CALLS = frozenset({"use", "func", "__construct", "__init__"})
+
 _SQL_FUNC_NAMES = frozenset({
     "VALUES", "values", "INSERT", "insert", "UPDATE", "update",
     "SELECT", "select", "DELETE", "delete", "WHERE", "where",
@@ -125,6 +128,10 @@ class ManyPositionalArgsRule(Rule):
             for m in _CALL_RE.finditer(line):
                 # Skip calls written inside strings or comments.
                 if is_in_non_code_context(line, m.start(), lang):
+                    continue
+                # Definitions, PHP closure captures and (framework-mandated)
+                # constructor signatures are not calls.
+                if m.group(1) in _NOT_CALLS or _DEFINITION_RE.search(line, 0, m.start()):
                     continue
                 func_name = m.group(1)
                 args_str = m.group(2)

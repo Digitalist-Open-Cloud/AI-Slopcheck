@@ -8,6 +8,10 @@ from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
 _DANGEROUS_RE = re.compile(r"dangerouslySetInnerHTML")
+# ={{ __html: `...` }} with no ${...}, or a plain string literal.
+_STATIC_HTML_RE = re.compile(
+    r"""\s*=\s*\{\{\s*__html\s*:\s*(?:`[^`$]*`|"[^"\n]*"|'[^'\n]*')\s*,?\s*\}\}"""
+)
 
 
 class JsDangerouslySetHtmlRule(Rule):
@@ -28,8 +32,12 @@ class JsDangerouslySetHtmlRule(Rule):
             return []
 
         findings: list[Finding] = []
-        for lineno, line in enumerate(content.splitlines(), start=1):
+        offset = 0
+        for lineno, line in enumerate(content.splitlines(keepends=True), start=1):
             m = _DANGEROUS_RE.search(line)
+            line_start, offset = offset, offset + len(line)
+            if m and _STATIC_HTML_RE.match(content, line_start + m.end()):
+                continue  # constant markup, no data flows in
             if m:
                 evidence = line.strip()
                 findings.append(

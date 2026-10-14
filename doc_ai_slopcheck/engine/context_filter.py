@@ -257,3 +257,23 @@ def php_comments(content: str) -> list[tuple[int, str]]:
                 (first + k, text) for k, text in enumerate(content[start:end].splitlines())
             )
     return out
+
+
+# C-style comments and strings, matched left to right so comment markers inside
+# strings ('http://', "/*") are skipped. Line comments stop at the newline.
+_C_TOKEN_RE = re.compile(
+    r"(?P<comment>//[^\n]*|/\*.*?(?:\*/|\Z))"
+    r"|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`",
+    re.DOTALL,
+)
+
+
+def c_style_comments(content: str) -> list[tuple[int, str]]:
+    """(line, text) for every line of every // or /* */ comment."""
+    line_of = _line_index(content)
+    out: list[tuple[int, str]] = []
+    for m in _C_TOKEN_RE.finditer(content):
+        if m.group("comment"):
+            first = line_of(m.start())
+            out.extend((first + k, text) for k, text in enumerate(m.group(0).splitlines()))
+    return out

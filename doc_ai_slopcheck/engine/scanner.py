@@ -12,6 +12,7 @@ from doc_ai_slopcheck.engine.duplication import find_duplicates
 from doc_ai_slopcheck.engine.repo_files import (
     DEFAULT_CODE_EXTENSIONS,
     discover_files,
+    is_generated,
     is_ignored,
 )
 from doc_ai_slopcheck.engine.suppression import is_suppressed, parse_suppressions
@@ -58,6 +59,8 @@ def _scan_single_file(
     """Scan a single file with the given rules. Thread-safe."""
     relative_path = path.relative_to(repo_root).as_posix()
     content = path.read_text(encoding="utf-8", errors="ignore")
+    if config.skip_generated and is_generated(content):
+        return [], 0, 0
     suppressions = parse_suppressions(content)
 
     findings: list[Finding] = []
@@ -148,7 +151,7 @@ def scan_paths(
                 total_suppressed += suppressed
 
     dup_findings, dup_suppressed = find_duplicates(
-        repo_root, files, config.rules.duplicate_code
+        repo_root, files, config.rules.duplicate_code, skip_generated=config.skip_generated
     )
     all_findings.extend(dup_findings)
     total_suppressed += dup_suppressed

@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -45,7 +46,8 @@ FAKE_PATH_RE = re.compile(
 class HallucinatedPlaceholderRule(Rule):
     rule_id = "hallucinated_placeholder"
     title = "Hallucinated placeholder value"
-    supported_extensions = None  # All file types
+    # Code only: example paths and URLs are normal in documentation.
+    supported_extensions = DEFAULT_CODE_EXTENSIONS - {".md"}
 
     def scan_file(
         self,

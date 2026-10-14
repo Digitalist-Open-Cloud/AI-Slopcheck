@@ -42,6 +42,10 @@ JS_ARROW_STUB_RE = re.compile(
 # Empty brace body: { } or { /* comment */ }
 JS_EMPTY_BODY_RE = re.compile(r"^\s*\{\s*(?:/\*.*?\*/\s*)?\}\s*$")
 
+_TODO_RE = re.compile(
+    r"\b(?:TODO|FIXME)\b|@todo|\bnot\s+(?:yet\s+)?implemented\b|\bimplement\s+(?:me|this)\b",
+    re.IGNORECASE,
+)
 # Throw NotImplementedError or similar
 JS_THROW_NOT_IMPL_RE = re.compile(
     r"^\s*throw\s+new\s+(?:Error|NotImplementedError)"
@@ -116,12 +120,18 @@ class StubFunctionBodyJsRule(Rule):
                 continue
 
             # Look at the brace-delimited body
-            body_lines = self._extract_brace_body(lines, i)
-            if body_lines is not None and len(body_lines) == 1:
+            body = self._extract_brace_body(lines, i)
+            if body is None:
+                continue
+            comments = [ln for ln in body if ln.startswith(("//", "/*", "*"))]
+            body_lines = [ln for ln in body if ln not in comments]
+            if len(body_lines) == 1:
                 stmt = body_lines[0].strip().rstrip(";")
-                if (
+                # A lone `return []` is often deliberate (Next.js
+                # generateStaticParams, default handlers); only a TODO makes it a stub.
+                if JS_THROW_NOT_IMPL_RE.match(body_lines[0]) or (
                     JS_STUB_RETURN_RE.match(body_lines[0])
-                    or JS_THROW_NOT_IMPL_RE.match(body_lines[0])
+                    and any(_TODO_RE.search(c) for c in comments)
                 ):
                     findings.append(
                         self._make_finding(
@@ -160,7 +170,7 @@ class StubFunctionBodyJsRule(Rule):
     def _extract_brace_body(
         lines: list[str], func_idx: int
     ) -> list[str] | None:
-        """Extract non-blank, non-comment lines from a brace-delimited body."""
+        """Extract non-blank lines (comments included) from a brace-delimited body."""
         # Find opening brace
         j = func_idx
         while j < len(lines) and "{" not in lines[j]:
@@ -185,7 +195,7 @@ class StubFunctionBodyJsRule(Rule):
 
             if started and brace_depth > 0 and k > j:
                 stripped = lines[k].strip()
-                if stripped and not stripped.startswith("//") and stripped != "{":
+                if stripped and stripped != "{":
                     body.append(stripped)
 
         return body if started else None
