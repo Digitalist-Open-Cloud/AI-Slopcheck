@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from doc_ai_slopcheck.config import AppConfig, BoundaryConfig, ForbiddenImportEdgesConfig, RulesConfig
+from doc_ai_slopcheck.config import (
+    AppConfig,
+    BoundaryConfig,
+    ForbiddenImportEdgesConfig,
+    RulesConfig,
+)
 from doc_ai_slopcheck.rules.repo.forbidden_import_edges import ForbiddenImportEdgesRule
 
 

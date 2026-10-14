@@ -37,6 +37,7 @@ CODE_OMISSION_RE = re.compile(
 
 class AiInstructionCommentRule(Rule):
     rule_id = "ai_instruction_comment"
+    code_only = False
     title = "AI instruction comment found"
     supported_extensions = None  # All file types
 

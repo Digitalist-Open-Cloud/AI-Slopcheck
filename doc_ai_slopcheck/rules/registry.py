@@ -51,7 +51,9 @@ from doc_ai_slopcheck.rules.generic.obfuscated_code import ObfuscatedCodeRule
 from doc_ai_slopcheck.rules.generic.obvious_perf_drain import ObviousPerfDrainRule
 from doc_ai_slopcheck.rules.generic.oversized_class import OversizedClassRule
 from doc_ai_slopcheck.rules.generic.param_reassignment import ParamReassignmentRule
+from doc_ai_slopcheck.rules.generic.php_user_input_sink import PhpUserInputSinkRule
 from doc_ai_slopcheck.rules.generic.placeholder_tokens import PlaceholderTokensRule
+from doc_ai_slopcheck.rules.generic.plan_reference_comment import PlanReferenceCommentRule
 from doc_ai_slopcheck.rules.generic.python_mutable_default import PythonMutableDefaultRule
 from doc_ai_slopcheck.rules.generic.react_async_useeffect import ReactAsyncUseeffectRule
 from doc_ai_slopcheck.rules.generic.react_index_key import ReactIndexKeyRule
@@ -65,15 +67,17 @@ from doc_ai_slopcheck.rules.generic.stale_comment import StaleCommentRule
 from doc_ai_slopcheck.rules.generic.stub_function_body import StubFunctionBodyRule
 from doc_ai_slopcheck.rules.generic.stub_function_body_go import StubFunctionBodyGoRule
 from doc_ai_slopcheck.rules.generic.stub_function_body_js import StubFunctionBodyJsRule
+from doc_ai_slopcheck.rules.generic.stub_function_body_php import StubFunctionBodyPhpRule
 from doc_ai_slopcheck.rules.generic.thread_unsafe_global import ThreadUnsafeGlobalRule
 from doc_ai_slopcheck.rules.generic.typescript_any_abuse import TypescriptAnyAbuseRule
 from doc_ai_slopcheck.rules.generic.undeclared_import import UndeclaredImportRule
-from doc_ai_slopcheck.rules.generic.unreachable_code_after_return import UnreachableCodeAfterReturnRule
+from doc_ai_slopcheck.rules.generic.unreachable_code_after_return import (
+    UnreachableCodeAfterReturnRule,
+)
 from doc_ai_slopcheck.rules.generic.unused_suppression import UnusedSuppressionRule
 from doc_ai_slopcheck.rules.generic.use_after_free import UseAfterFreeRule
 from doc_ai_slopcheck.rules.generic.weak_function_name import WeakFunctionNameRule
 from doc_ai_slopcheck.rules.generic.weak_hash import WeakHashRule
-from doc_ai_slopcheck.rules.generic.within_file_duplication import WithinFileDuplicationRule
 from doc_ai_slopcheck.rules.repo.forbidden_import_edges import ForbiddenImportEdgesRule
 
 
@@ -81,6 +85,7 @@ def build_rules() -> list[Rule]:
     return [
         # Original rules
         PlaceholderTokensRule(),
+        PlanReferenceCommentRule(),
         ForbiddenImportEdgesRule(),
         # Tier 1: AI code failure detection
         StubFunctionBodyRule(),
@@ -97,6 +102,8 @@ def build_rules() -> list[Rule]:
         AiHardcodedMocksRule(),
         # Multi-language variants
         StubFunctionBodyJsRule(),
+        StubFunctionBodyPhpRule(),
+        PhpUserInputSinkRule(),
         StubFunctionBodyGoRule(),
         BareExceptPassJsRule(),
         BareExceptPassGoRule(),
@@ -144,7 +151,6 @@ def build_rules() -> list[Rule]:
         GotoUsageRule(),
         AssignmentInConditionalRule(),
         # Phase 8: Structure and design rules
-        WithinFileDuplicationRule(),
         EarlyReturnOpportunityRule(),
         RecursionWithoutLimitRule(),
         DeepInheritanceRule(),

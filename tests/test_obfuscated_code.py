@@ -27,14 +27,26 @@ def test_detects_function_constructor_js() -> None:
     assert len(findings) == 1
 
 
-def test_detects_atob_js() -> None:
-    findings = _scan("const decoded = atob(data);\n", path="src/app.ts")
+def test_detects_eval_of_atob_js() -> None:
+    findings = _scan("eval(atob(payload));\n", path="src/app.ts")
     assert len(findings) == 1
+    assert "base64-decoded" in findings[0].message
 
 
-def test_detects_base64_decode_python() -> None:
-    findings = _scan("data = base64.b64decode(encoded)\n")
+def test_detects_exec_of_base64_decode_python() -> None:
+    findings = _scan("exec(base64.b64decode(encoded))\n")
     assert len(findings) == 1
+    assert "base64-decoded" in findings[0].message
+
+
+def test_plain_base64_decode_is_not_obfuscation() -> None:
+    """Decoding keys or auth headers is routine; only executing decoded data is suspicious."""
+    assert _scan("key = base64.b64decode(settings.kek)\n") == []
+    assert _scan("const decoded = atob(data);\n", path="src/app.ts") == []
+
+
+def test_bytes_literal_hex_is_binary_data() -> None:
+    assert _scan('_OLE_MAGIC = b"\\xd0\\xcf\\x11\\xe0\\xa1\\xb1\\x1a\\xe1"\n') == []
 
 
 def test_detects_dense_hex_escapes() -> None:
@@ -101,3 +113,8 @@ def test_skips_files_with_long_average_lines() -> None:
 def test_clean_code_no_findings() -> None:
     findings = _scan("x = int(user_input)\n")
     assert len(findings) == 0
+
+
+def test_regex_exec_method_is_not_eval() -> None:
+    code = "const m = /^##\\s+(.+)$/.exec(line);\nconst r = re.exec(s);\n"
+    assert _scan(code, path="src/parse.ts") == []

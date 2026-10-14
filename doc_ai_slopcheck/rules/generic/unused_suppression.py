@@ -16,6 +16,7 @@ SUPPRESSION_RE = re.compile(
 
 class UnusedSuppressionRule(Rule):
     rule_id = "unused_suppression"
+    code_only = False
     title = "Unused suppression comment"
     supported_extensions = None  # All file types
 

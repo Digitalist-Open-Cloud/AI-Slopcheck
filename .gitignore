@@ -1,4 +1,6 @@
 .venv/
+findings.json
+report.html
 __pycache__/
 *.pyc
 dist/

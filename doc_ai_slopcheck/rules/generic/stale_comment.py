@@ -20,6 +20,7 @@ def _words(text: str) -> set[str]:
 
 class StaleCommentRule(Rule):
     rule_id = "stale_comment"
+    code_only = False
     title = "Comment restates what the code does"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"}
 

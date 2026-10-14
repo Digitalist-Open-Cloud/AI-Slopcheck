@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -25,13 +27,26 @@ _DEBUG_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"^\s*import\s+ipdb\b"), "import ipdb"),
 ]
 
+# PHP dumps, plus Drupal devel and Laravel/Symfony helpers. The lookbehind
+# skips methods ($logger->dump) and longer names (my_dpm).
+_PHP_CALL = r"(?<![\w>:$\\])(?<!function )"
+_PHP_DEBUG_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(_PHP_CALL + r"var_dump\s*\("), "var_dump()"),
+    (re.compile(_PHP_CALL + r"(print_r|var_export)\s*\("
+                r"(?![^;]*,\s*(?:\$\w+\s*=\s*)?(?i:true|1)\s*\))"),
+     "print_r()/var_export() output"),
+    (re.compile(_PHP_CALL + r"(dd|dump|dpm|dsm|dvm|kpr|kint|ksm|xdebug_break)\s*\("),
+     "debug helper call"),
+    (re.compile(_PHP_CALL + r"debug_zval_dump\s*\("), "debug_zval_dump()"),
+]
+
 _COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*)")
 
 
 class DebugCodeLeftRule(Rule):
     rule_id = "debug_code_left"
     title = "Debug statement left in code"
-    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs"}
+    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs"} | PHP_EXTENSIONS
 
     def scan_file(
         self,
@@ -48,12 +63,18 @@ class DebugCodeLeftRule(Rule):
         if _TEST_PATH_RE.search(relative_path):
             return []
 
+        patterns = _DEBUG_PATTERNS
+        lang = "generic"
+        if Path(relative_path).suffix.lower() in PHP_EXTENSIONS:
+            patterns = _DEBUG_PATTERNS + _PHP_DEBUG_PATTERNS
+            lang = "php"
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):
             if _COMMENT_RE.match(line):
                 continue
-            for pattern, label in _DEBUG_PATTERNS:
-                if pattern.search(line):
+            for pattern, label in patterns:
+                m = pattern.search(line)
+                if m and not is_in_non_code_context(line, m.start(), lang):
                     findings.append(
                         self.build_finding(
                             relative_path=relative_path,

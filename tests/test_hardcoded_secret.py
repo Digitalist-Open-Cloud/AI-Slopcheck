@@ -110,3 +110,13 @@ def test_low_entropy_value_medium_confidence() -> None:
     findings = _scan('password = "aaaaaaaaaa"\n')
     assert len(findings) == 1
     assert findings[0].confidence.value == "medium"
+
+
+def test_php_label_constants_are_not_secrets() -> None:
+    code = (
+        "public const UI_CONTROL_PASSWORD = 'password';\n"
+        "public const NONCE_ADD_AUTH_TOKEN = 'addAuthTokenNonce';\n"
+        "const RESET_PASSWORD = 'confirm_reset_password';\n"
+    )
+    assert _scan(code, "src/Controller.php") == []
+    assert len(_scan("$password = 'hunter2secret';\n", "src/Db.php")) == 1

@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.context_filter import non_code_lines
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -28,12 +30,13 @@ CODE_FENCE_RE = re.compile(
 
 class AiConversationalBleedRule(Rule):
     rule_id = "ai_conversational_bleed"
+    code_only = False
     title = "AI conversational text in source"
     # Restrict to source code files — not documentation (.md, .rst, .txt)
     supported_extensions = {
         ".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs",
         ".java", ".kt", ".cs", ".c", ".cc", ".cpp", ".h", ".hpp",
-    }
+    } | PHP_EXTENSIONS
 
     def scan_file(
         self,
@@ -58,6 +61,8 @@ class AiConversationalBleedRule(Rule):
         ):
             return []
 
+        # Fences inside docstrings/comments are Markdown docs, not chat bleed.
+        prose_lines = non_code_lines(content, Path(relative_path).suffix.lower())
         findings: list[Finding] = []
         for line_number, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
@@ -83,7 +88,7 @@ class AiConversationalBleedRule(Rule):
                 )
                 continue
 
-            if CODE_FENCE_RE.match(stripped):
+            if CODE_FENCE_RE.match(stripped) and line_number not in prose_lines:
                 findings.append(
                     self.build_finding(
                         relative_path=relative_path,

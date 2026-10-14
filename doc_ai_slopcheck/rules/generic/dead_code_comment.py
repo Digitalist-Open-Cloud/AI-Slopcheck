@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -16,6 +17,7 @@ COMMENT_PREFIXES: dict[str, str] = {
     ".java": "//", ".kt": "//",
     ".cs": "//",
     ".c": "//", ".cc": "//", ".cpp": "//", ".h": "//", ".hpp": "//",
+    **dict.fromkeys(PHP_EXTENSIONS, "//"),
 }
 
 # Patterns that indicate commented-out code (not prose comments)
@@ -53,6 +55,7 @@ def _is_prose(text: str) -> bool:
 
 class DeadCodeCommentRule(Rule):
     rule_id = "dead_code_comment"
+    code_only = False
     title = "Commented-out code block"
     supported_extensions = set(COMMENT_PREFIXES.keys())
 

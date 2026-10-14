@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -16,7 +17,7 @@ _TEST_PATH_RE = re.compile(
 class SelectStarSqlRule(Rule):
     rule_id = "select_star_sql"
     title = "SELECT * used in SQL query"
-    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"}
+    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
 
     def scan_file(
         self,

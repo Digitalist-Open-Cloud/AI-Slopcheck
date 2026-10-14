@@ -130,3 +130,20 @@ def test_finding_severity_and_confidence() -> None:
 def test_finding_tags_include_design() -> None:
     findings = _scan("f(a, b, c, d, e, g, h)\n")
     assert "design" in findings[0].tags
+
+
+def test_commas_inside_literals_not_counted() -> None:
+    """Commas inside array/object literals and strings are not argument separators."""
+    js = (
+        "label('x', 'cls', [a, b, c], [d, e]);\n"
+        "rows.push([a, b, c, d, e, f, g]);\n"
+        "assign(cam, { left: -16, right: 16, top: 12, bottom: -12, near: 1, far: 50 });\n"
+        "log('a, b, c, d, e, f, g');\n"
+    )
+    assert _scan(js, path="src/scene.js") == []
+
+
+def test_literal_args_still_counted_once() -> None:
+    findings = _scan("f([1, 2], {a: 1, b: 2}, c, d, e, g, h)\n", path="src/x.js")
+    assert len(findings) == 1
+    assert "7 positional" in findings[0].message

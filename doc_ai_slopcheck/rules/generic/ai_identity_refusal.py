@@ -23,6 +23,7 @@ AI_IDENTITY_RE = re.compile(
 
 class AiIdentityRefusalRule(Rule):
     rule_id = "ai_identity_refusal"
+    code_only = False
     title = "AI identity or refusal text in source"
     supported_extensions = None  # All file types
 

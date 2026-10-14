@@ -13,7 +13,17 @@ def rule() -> MultipleClassesPerFileRule:
 
 @pytest.fixture
 def config() -> AppConfig:
-    return AppConfig()
+    config = AppConfig()
+    config.rules.multiple_classes_per_file.python = True
+    return config
+
+
+def test_python_off_by_default(rule: MultipleClassesPerFileRule) -> None:
+    content = "class A:\n    pass\n\nclass B:\n    pass\n"
+    findings = rule.scan_file(
+        repo_root=Path("/repo"), relative_path="src/models.py", content=content, config=AppConfig()
+    )
+    assert findings == []
 
 
 # ---------------------------------------------------------------------------

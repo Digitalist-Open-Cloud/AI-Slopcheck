@@ -37,6 +37,8 @@ class MultipleClassesPerFileRule(Rule):
 
         ext = Path(relative_path).suffix.lower()
         if ext in _PYTHON_EXTS:
+            if not rule_config.python:
+                return []
             pattern = _PY_CLASS_RE
         elif ext in _JS_EXTS:
             pattern = _JS_CLASS_RE

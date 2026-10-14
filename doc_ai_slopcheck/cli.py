@@ -19,6 +19,7 @@ from doc_ai_slopcheck.models import (
     Severity,
 )
 from doc_ai_slopcheck.output.annotations import render_annotations
+from doc_ai_slopcheck.output.html_report import render_html
 from doc_ai_slopcheck.output.markdown_summary import render_summary
 from doc_ai_slopcheck.output.sarif import render_sarif
 from doc_ai_slopcheck.state.store import load_baseline, write_baseline
@@ -207,10 +208,13 @@ def scan(
         None,
         help="Files or directories to scan. If omitted, scan the repo root.",
     ),
-    repo_root: Path = typer.Option(
-        Path("."),
+    repo_root: Path | None = typer.Option(
+        None,
         "--repo-root",
-        help="Repository root used for relative paths and config lookup.",
+        help=(
+            "Repository root used for relative paths and config lookup. "
+            "Defaults to the scanned directory if exactly one is given, else the current directory."
+        ),
     ),
     config: str = typer.Option(
         "",
@@ -254,9 +258,20 @@ def scan(
         help="Optional API snapshot JSON. Routes present in snapshot but missing now are reported.",
     ),
 ) -> None:
+    if repo_root is None:
+        repo_root = paths[0] if paths and len(paths) == 1 and paths[0].is_dir() else Path(".")
     repo_root = repo_root.resolve()
     targets = list(paths) if paths else None
     config_path = Path(config) if config else None
+
+    outside = [p for p in targets or [] if not (repo_root / p).resolve().is_relative_to(repo_root)]
+    if outside:
+        typer.echo(
+            f"slopcheck: {', '.join(map(str, outside))} is outside repo root {repo_root}; "
+            "pass --repo-root",
+            err=True,
+        )
+        raise typer.Exit(code=2)
 
     # Resolve changed-files into targets
     if changed_files:
@@ -337,6 +352,15 @@ def sarif_command(
 ) -> None:
     scan_result = _load_scan_result(findings_file)
     typer.echo(render_sarif(scan_result))
+
+
+@app.command("html")
+def html_command(
+    findings_file: Path = typer.Argument(..., help="Path to findings JSON."),
+) -> None:
+    """Render findings as a standalone HTML report."""
+    scan_result = _load_scan_result(findings_file)
+    typer.echo(render_html(scan_result))
 
 
 @app.command("create-baseline")

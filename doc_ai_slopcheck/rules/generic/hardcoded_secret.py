@@ -27,6 +27,9 @@ _PLACEHOLDER_RE = re.compile(
     re.IGNORECASE,
 )
 
+# camelCase or separated words: 'addAuthTokenNonce', 'confirm_reset'.
+_LABEL_RE = re.compile(r"^[a-z]+(?:[A-Z][a-z]+)+$|^[A-Za-z]+(?:[_.-][A-Za-z]+)+$")
+
 # Shannon entropy threshold: values above this are "high entropy" (more suspicious)
 _ENTROPY_THRESHOLD = 3.5
 
@@ -107,6 +110,11 @@ class HardcodedSecretRule(Rule):
             key_name = re.split(r"\s*[=:]", line.strip())[0].strip()
             key_base = key_name.split(".")[-1].strip()
             if value.lower() == key_base.lower():
+                continue
+            # Identifier-shaped values are labels (nonce, form field or setting
+            # names), and so is a value equal to the key word ('password').
+            key_word = re.split(r"\s*[=:]", m.group(0))[0]
+            if _LABEL_RE.match(value) or value.lower() == key_word.lower():
                 continue
             # Skip very short values (< 6 chars) — likely enum/config
             if len(value) < 6:

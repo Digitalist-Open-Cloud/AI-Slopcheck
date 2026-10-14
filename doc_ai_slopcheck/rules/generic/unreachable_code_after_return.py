@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -16,6 +17,7 @@ _PY_STRUCTURAL_RE = re.compile(
 
 # JS exit statements at end of a line (with or without semicolon)
 _JS_EXIT_RE = re.compile(r"^(\s*)(return|throw|break|continue)\b[^;]*;?\s*$")
+_PHP_EXIT_RE = re.compile(r"^(\s*)(return|throw|break|continue)\b[^;]*;\s*(?://.*|#.*)?$")
 _JS_STRUCTURAL_RE = re.compile(
     r"^\s*(catch\b|finally\b|else\b|case\b|default\b|}|//|$)"
 )
@@ -25,7 +27,7 @@ _JS_STRUCTURAL_RE = re.compile(
 class UnreachableCodeAfterReturnRule(Rule):
     rule_id = "unreachable_code_after_return"
     title = "Unreachable code after return/throw/raise"
-    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"}
+    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
 
     def scan_file(
         self,
@@ -42,7 +44,10 @@ class UnreachableCodeAfterReturnRule(Rule):
         suffix = Path(relative_path).suffix.lower()
         if suffix == ".py":
             return self._scan_python(relative_path, content)
-        return self._scan_js(relative_path, content)
+        # PHP has no automatic semicolon insertion: `return $a` continues on
+        # the next line until the `;`.
+        exit_re = _PHP_EXIT_RE if suffix in PHP_EXTENSIONS else _JS_EXIT_RE
+        return self._scan_js(relative_path, content, exit_re)
 
     def _scan_python(self, relative_path: str, content: str) -> list[Finding]:
         findings: list[Finding] = []
@@ -79,11 +84,13 @@ class UnreachableCodeAfterReturnRule(Rule):
                 )
         return findings
 
-    def _scan_js(self, relative_path: str, content: str) -> list[Finding]:
+    def _scan_js(
+        self, relative_path: str, content: str, exit_re: re.Pattern[str]
+    ) -> list[Finding]:
         findings: list[Finding] = []
         lines = content.splitlines()
         for i, line in enumerate(lines):
-            m = _JS_EXIT_RE.match(line)
+            m = exit_re.match(line)
             if not m:
                 continue
             exit_indent = len(m.group(1))

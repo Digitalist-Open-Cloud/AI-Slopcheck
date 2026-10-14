@@ -3,7 +3,12 @@ from __future__ import annotations
 from fnmatch import fnmatch
 from pathlib import Path
 
-DEFAULT_CODE_EXTENSIONS = {
+# PHP plus the PHP file types Drupal uses for modules, themes and profiles.
+PHP_EXTENSIONS = frozenset({
+    ".php", ".module", ".inc", ".install", ".theme", ".profile", ".engine",
+})
+
+DEFAULT_CODE_EXTENSIONS = PHP_EXTENSIONS | {
     ".py",
     ".js",
     ".jsx",

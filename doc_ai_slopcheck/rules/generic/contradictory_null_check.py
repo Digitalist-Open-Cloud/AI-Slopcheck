@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -25,6 +26,23 @@ _SUBSCRIPT_RE = re.compile(r"\b(\w+)\s*\[")
 _ITER_RE = re.compile(r"\bfor\s+\w[\w,\s]*\s+in\s+(\w+)\b")
 
 _COMMENT_RE = re.compile(r"^\s*#")
+
+# Fine on an empty (falsy) container: `if not items: items.append(x)`.
+_EMPTY_OK_METHODS = frozenset({
+    "append", "extend", "add", "update", "insert", "setdefault", "clear", "copy",
+    "get", "items", "keys", "values", "join", "format", "strip", "split", "lower",
+    "upper", "startswith", "endswith",
+})
+_ITEM_ASSIGN_RE = re.compile(r"\[[^\]]*\]\s*=(?!=)")
+_NAME_RE = re.compile(r"\w+")
+
+
+def _ok_on_empty(rx: re.Pattern[str], line: str, hit: re.Match[str]) -> bool:
+    """Access that is valid on an empty container: x.append(...), x[k] = v."""
+    if rx is _ATTR_ACCESS_RE:
+        name = _NAME_RE.match(line, hit.end())
+        return bool(name) and name.group(0) in _EMPTY_OK_METHODS
+    return bool(_ITEM_ASSIGN_RE.match(line, hit.end() - 1))
 
 
 def _indent(line: str) -> int:
@@ -93,27 +111,32 @@ class ContradictoryNullCheckRule(Rule):
                     # Flag attribute access or subscript on guarded_var
                     for rx in (_ATTR_ACCESS_RE, _SUBSCRIPT_RE):
                         for hit in rx.finditer(body_line):
-                            if hit.group(1) == guarded_var:
-                                findings.append(
-                                    self.build_finding(
-                                        relative_path=relative_path,
-                                        line=j + 1,
-                                        message=(
-                                            f"`{guarded_var}` is used at line {j + 1} but the "
-                                            f"enclosing `if` at line {i + 1} guards against it "
-                                            f"being None/falsy — this access will always raise."
-                                        ),
-                                        severity=Severity.ERROR,
-                                        confidence=Confidence.MEDIUM,
-                                        evidence=body_line.strip(),
-                                        suggestion=(
-                                            f"The `if {line.strip()[3:]}` block runs when "
-                                            f"`{guarded_var}` is None or empty. "
-                                            "Either invert the check or remove the dereference."
-                                        ),
-                                        tags=["null-check", "correctness"],
-                                    )
+                            if hit.group(1) != guarded_var or is_in_non_code_context(
+                                body_line, hit.start(), "py"
+                            ):
+                                continue
+                            if check_kind == "not_x" and _ok_on_empty(rx, body_line, hit):
+                                continue
+                            findings.append(
+                                self.build_finding(
+                                    relative_path=relative_path,
+                                    line=j + 1,
+                                    message=(
+                                        f"`{guarded_var}` is used at line {j + 1} but the "
+                                        f"enclosing `if` at line {i + 1} guards against it "
+                                        f"being None/falsy — this access will always raise."
+                                    ),
+                                    severity=Severity.ERROR,
+                                    confidence=Confidence.MEDIUM,
+                                    evidence=body_line.strip(),
+                                    suggestion=(
+                                        f"The `if {line.strip()[3:]}` block runs when "
+                                        f"`{guarded_var}` is None or empty. "
+                                        "Either invert the check or remove the dereference."
+                                    ),
+                                    tags=["null-check", "correctness"],
                                 )
+                            )
                             break  # one finding per line per variable is enough
                 else:
                     # len_zero: flag iteration over guarded_var

@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -18,8 +19,8 @@ JS_EMPTY_CATCH_RE = re.compile(
 
 class BareExceptPassJsRule(Rule):
     rule_id = "bare_except_pass_js"
-    title = "Silent exception handler (JS/TS)"
-    supported_extensions = {".js", ".jsx", ".ts", ".tsx"}
+    title = "Silent exception handler (JS/TS/PHP)"
+    supported_extensions = {".js", ".jsx", ".ts", ".tsx"} | PHP_EXTENSIONS
 
     def scan_file(
         self,

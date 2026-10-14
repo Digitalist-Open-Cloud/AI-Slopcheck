@@ -7,11 +7,33 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS, discover_files
+from doc_ai_slopcheck.engine.context_filter import non_code_lines
+from doc_ai_slopcheck.engine.duplication import find_duplicates
+from doc_ai_slopcheck.engine.repo_files import (
+    DEFAULT_CODE_EXTENSIONS,
+    discover_files,
+    is_ignored,
+)
 from doc_ai_slopcheck.engine.suppression import is_suppressed, parse_suppressions
-from doc_ai_slopcheck.models import Finding, ScanResult, ScanStats
+from doc_ai_slopcheck.models import Finding, ScanResult, ScanStats, Severity
 from doc_ai_slopcheck.rules.base import Rule
 from doc_ai_slopcheck.rules.registry import build_rules
+
+_DOWNGRADE = {Severity.ERROR: Severity.WARNING, Severity.WARNING: Severity.NOTE}
+
+
+def _downgrade_test_code(findings: list[Finding], test_paths: list[str]) -> list[Finding]:
+    return [
+        f.model_copy(
+            update={
+                "severity": _DOWNGRADE.get(f.severity, f.severity),
+                "tags": [*f.tags, "test-code"],
+            }
+        )
+        if is_ignored(f.location.path, test_paths)
+        else f
+        for f in findings
+    ]
 
 
 def _build_rules_by_ext(rules: list[Rule]) -> dict[str, list[Rule]]:
@@ -41,6 +63,7 @@ def _scan_single_file(
     findings: list[Finding] = []
     rule_errors = 0
     suppressed_count = 0
+    comment_lines: frozenset[int] | None = None  # computed on first need
 
     for rule in applicable_rules:
         try:
@@ -51,6 +74,11 @@ def _scan_single_file(
                 config=config,
             )
             for finding in file_findings:
+                if rule.code_only:
+                    if comment_lines is None:
+                        comment_lines = non_code_lines(content, path.suffix.lower())
+                    if finding.location.line in comment_lines:
+                        continue
                 if is_suppressed(
                     suppressions, finding.location.line, finding.rule_id
                 ):
@@ -118,6 +146,13 @@ def scan_paths(
                 all_findings.extend(findings)
                 total_errors += errors
                 total_suppressed += suppressed
+
+    dup_findings, dup_suppressed = find_duplicates(
+        repo_root, files, config.rules.duplicate_code
+    )
+    all_findings.extend(dup_findings)
+    total_suppressed += dup_suppressed
+    all_findings = _downgrade_test_code(all_findings, config.test_paths)
 
     all_findings.sort(
         key=lambda item: (

@@ -12,6 +12,9 @@ class Rule(ABC):
     rule_id: str
     title: str
     supported_extensions: set[str] | None = None
+    # Findings on lines that are only comments/docstrings are dropped unless the
+    # rule is about comments itself (TODOs, plan IDs, chat bleed, ...).
+    code_only: bool = True
 
     def applies_to_path(self, relative_path: str) -> bool:
         if self.supported_extensions is None:

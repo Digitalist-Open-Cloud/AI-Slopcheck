@@ -30,6 +30,18 @@ class ForbiddenImportEdgesConfig(BaseModel):
     boundaries: list[BoundaryConfig] = Field(default_factory=list)
 
 
+class StubFunctionBodyPhpConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
+class PhpUserInputSinkConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+
+
 class StubFunctionBodyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -235,8 +247,8 @@ class DeepNestingConfig(BaseModel):
 class LargeFunctionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = False  # Opt-in: 16K findings at 60 lines is too noisy
-    max_lines: int = 100
+    enabled: bool = True
+    max_lines: int = 150
 
 
 class SelectStarSqlConfig(BaseModel):
@@ -328,11 +340,35 @@ class AssignmentInConditionalConfig(BaseModel):
     enabled: bool = True
 
 
-class WithinFileDuplicationConfig(BaseModel):
+class PlanReferenceCommentConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = False
-    min_lines: int = 4
+    enabled: bool = True
+    # Regexes matched against comment and docstring text. Add e.g.
+    # r"\bD-\d+\b" to also flag decision-record IDs.
+    patterns: list[str] = Field(
+        default_factory=lambda: [
+            r"\b(?:Task|Phase|Milestone|Sprint|Fas|Uppgift)\s+#?[A-Z]?\d+(?:\.\d+)*\b",
+            r"\b(?!V\d)[A-Z]\d{1,2}\b",  # short plan IDs; skips versions and lint codes
+        ]
+    )
+    # Real-world terms that look like plan IDs.
+    ignore: list[str] = Field(
+        default_factory=lambda: [
+            "S3", "V8", "A4", "C4", "F1", "G1", "T4", "C89", "C99", "C11",
+            "P50", "P75", "P90", "P95", "P99",
+            "H1", "H2", "H3", "H4", "H5", "H6", "L1", "L2", "L3",
+            "M1", "M2", "M3", "M4", "Q1", "Q2", "Q3", "Q4",
+        ]
+    )
+
+
+class DuplicateCodeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = True
+    min_lines: int = 10  # normalised lines: blank and comment-only lines excluded
+    min_chars: int = 250  # skip windows of trivial lines (braces, short calls)
 
 
 class EarlyReturnOpportunityConfig(BaseModel):
@@ -425,6 +461,9 @@ class MultipleClassesPerFileConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
+    # Off for Python: grouping small related classes (Pydantic models,
+    # exception hierarchies) in one module is idiomatic there.
+    python: bool = False
 
 
 class OversizedClassConfig(BaseModel):
@@ -461,6 +500,12 @@ class RulesConfig(BaseModel):
     )
     stub_function_body: StubFunctionBodyConfig = Field(
         default_factory=StubFunctionBodyConfig
+    )
+    stub_function_body_php: StubFunctionBodyPhpConfig = Field(
+        default_factory=StubFunctionBodyPhpConfig
+    )
+    php_user_input_sink: PhpUserInputSinkConfig = Field(
+        default_factory=PhpUserInputSinkConfig
     )
     ai_instruction_comment: AiInstructionCommentConfig = Field(
         default_factory=AiInstructionCommentConfig
@@ -546,8 +591,11 @@ class RulesConfig(BaseModel):
     assignment_in_conditional: AssignmentInConditionalConfig = Field(
         default_factory=AssignmentInConditionalConfig
     )
-    within_file_duplication: WithinFileDuplicationConfig = Field(
-        default_factory=WithinFileDuplicationConfig
+    plan_reference_comment: PlanReferenceCommentConfig = Field(
+        default_factory=PlanReferenceCommentConfig
+    )
+    duplicate_code: DuplicateCodeConfig = Field(
+        default_factory=DuplicateCodeConfig
     )
     early_return_opportunity: EarlyReturnOpportunityConfig = Field(
         default_factory=EarlyReturnOpportunityConfig
@@ -610,11 +658,29 @@ class AppConfig(BaseModel):
             # Dependencies
             "node_modules/**", "**/node_modules/**",
             "vendor/**", "**/vendor/**",
+            # Drupal core and contrib (only custom code is the project's own)
+            "web/core/**", "docroot/core/**", "html/core/**",
+            "**/modules/contrib/**", "**/themes/contrib/**", "**/profiles/contrib/**",
+            "web/libraries/**", "docroot/libraries/**", "**/sites/*/files/**",
+            # Drupal scaffold copies and generated files
+            "**/default.settings.php", "**/sites/example.*.php", "**/.ht.router.php",
+            "web/index.php", "web/update.php", "web/autoload.php",
+            "**/sites/simpletest/**", "**/.phpstorm.meta.php",
             # Generated code
             "**/generated/**",
             # Agent/CI artifacts
             "**/.claude/**", "**/worktrees/**",
             "**/swarm/runs/**", "**/agents/swarm/**",
+        ]
+    )
+    # Findings in test and mock code drop one severity level (error -> warning,
+    # warning -> note). Set to [] to treat test code like production code.
+    test_paths: list[str] = Field(
+        default_factory=lambda: [
+            "tests/*", "*/tests/*", "test/*", "*/test/*", "*/__tests__/*",
+            "*/mocks/*", "*/__mocks__/*", "*/fixtures/*", "*/testdata/*",
+            "test_*.py", "*/test_*.py", "*_test.py", "*_test.go", "conftest.py",
+            "*/conftest.py", "*.test.*", "*.spec.*", "*Test.php",
         ]
     )
     rules: RulesConfig = Field(default_factory=RulesConfig)

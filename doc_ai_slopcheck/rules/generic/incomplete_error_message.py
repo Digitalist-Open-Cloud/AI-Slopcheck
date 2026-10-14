@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -31,7 +32,7 @@ class IncompleteErrorMessageRule(Rule):
     supported_extensions = {
         ".py", ".js", ".jsx", ".ts", ".tsx", ".go",
         ".java", ".kt", ".cs", ".rs",
-    }
+    } | PHP_EXTENSIONS
 
     def scan_file(
         self,

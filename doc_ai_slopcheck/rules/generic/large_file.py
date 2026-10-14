@@ -3,14 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
 _CODE_EXTENSIONS = frozenset({
     ".py", ".js", ".jsx", ".ts", ".tsx",
     ".go", ".rs", ".c", ".cc", ".cpp", ".h", ".hpp",
-    ".java", ".rb", ".php", ".cs", ".swift",
-})
+    ".java", ".rb", ".cs", ".swift",
+}) | PHP_EXTENSIONS
 
 
 class LargeFileRule(Rule):

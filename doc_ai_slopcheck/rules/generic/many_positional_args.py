@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -30,8 +32,32 @@ _SQL_LINE_RE = re.compile(
 # Array/tuple literal context: line is clearly data, not a call.
 _DATA_LITERAL_RE = re.compile(r"^\s*[\[\(]")
 
-# Template literal / string interpolation context.
-_STRING_CONTEXT_RE = re.compile(r"""['"`].*\b\w+\s*\([^)]*\).*['"`]""")
+# Lines this long are generated data (fixtures, serialized blobs), not calls.
+_MAX_LINE = 2000
+_LANG = {".py": "py", ".js": "js", ".jsx": "js", ".ts": "js", ".tsx": "js"}
+
+
+def _split_top_level(args_str: str) -> list[str]:
+    """Split on commas outside [], {} and string literals."""
+    parts: list[str] = []
+    depth = 0
+    quote = ""
+    start = 0
+    for i, ch in enumerate(args_str):
+        if quote:
+            if ch == quote and args_str[i - 1] != "\\":
+                quote = ""
+        elif ch in "'\"`":
+            quote = ch
+        elif ch in "[{":
+            depth += 1
+        elif ch in "]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append(args_str[start:i])
+            start = i + 1
+    parts.append(args_str[start:])
+    return parts
 
 
 def _count_positional_args(args_str: str) -> int:
@@ -45,7 +71,7 @@ def _count_positional_args(args_str: str) -> int:
         return 0
 
     # If all args are just `?` placeholders (SQL bind params), skip.
-    parts = stripped.split(",")
+    parts = _split_top_level(stripped)
     non_placeholder = [p.strip() for p in parts if p.strip() not in ("?", "%s", "$1", "$2",
                         "$3", "$4", "$5", "$6", "$7", "$8", "$9", "$10")]
     if not non_placeholder:
@@ -66,7 +92,7 @@ def _count_positional_args(args_str: str) -> int:
 class ManyPositionalArgsRule(Rule):
     rule_id = "many_positional_args"
     title = "Too many positional arguments in function call"
-    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx"}
+    supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx"} | PHP_EXTENSIONS
 
     def scan_file(
         self,
@@ -83,7 +109,11 @@ class ManyPositionalArgsRule(Rule):
         max_positional = rule_config.max_positional
         findings: list[Finding] = []
 
+        lang = _LANG.get(Path(relative_path).suffix.lower(), "php")
         for lineno, line in enumerate(content.splitlines(), start=1):
+            if len(line) > _MAX_LINE:
+                continue
+
             # Skip lines that are clearly SQL statements.
             if _SQL_LINE_RE.search(line):
                 continue
@@ -92,11 +122,10 @@ class ManyPositionalArgsRule(Rule):
             if _DATA_LITERAL_RE.match(line):
                 continue
 
-            # Skip calls embedded in string literals.
-            if _STRING_CONTEXT_RE.search(line):
-                continue
-
             for m in _CALL_RE.finditer(line):
+                # Skip calls written inside strings or comments.
+                if is_in_non_code_context(line, m.start(), lang):
+                    continue
                 func_name = m.group(1)
                 args_str = m.group(2)
 

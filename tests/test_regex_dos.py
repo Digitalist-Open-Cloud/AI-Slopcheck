@@ -30,7 +30,7 @@ def test_detects_nested_star_quantifier() -> None:
 
 
 def test_detects_non_capturing_nested() -> None:
-    code = 'pattern = "(?:ab+)+";\n'
+    code = 'pattern = "(?:\\\\w+\\\\s?)+$";\n'
     findings = _scan(code, path="src/validate.ts")
     assert len(findings) == 1
 
@@ -75,3 +75,20 @@ def test_disabled_rule() -> None:
         config=config,
     )
     assert len(findings) == 0
+
+
+def test_flags_dot_star_and_open_counted_repeats() -> None:
+    assert len(_scan('re.compile(r"^(.*,)*x$")\n')) == 1
+    assert len(_scan('re.compile(r"(\\d+){2,}")\n')) == 1
+
+
+def test_allows_unambiguous_repeated_groups() -> None:
+    """Patterns from a real codebase that were flagged before but cannot backtrack."""
+    code = (
+        're.compile(r"^k[0-9]+-[0-9]{4}-[0-9]{2}(-[0-9]+)?$")\n'  # optional, not repeated
+        're.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")\n'  # '-' separates iterations
+        're.compile(r"^service:\\n(?:.*\\n)*?\\s+port")\n'  # '.' never matches \\n
+        're.compile(r"(\\d+\\.)*\\d+")\n'
+        '"(rad på formen `*Verifierad YYYY-MM-DD (...)*`)"\n'  # prose, no quantifier inside
+    )
+    assert _scan(code) == []

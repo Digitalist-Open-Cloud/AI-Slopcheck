@@ -370,3 +370,32 @@ def test_github_annotations_missing_file_exits_nonzero() -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_scan_single_dir_defaults_repo_root_to_it(tmp_path: Path) -> None:
+    """Scanning a directory outside the cwd without --repo-root must still scan it."""
+    fixture_root = Path("tests/fixtures/sample_repo").resolve()
+    output_file = tmp_path / "findings.json"
+
+    result = runner.invoke(
+        app,
+        ["scan", str(fixture_root), "--output", str(output_file), "--fail-on", "none"],
+    )
+
+    assert result.exit_code == 0
+    payload = output_file.read_text(encoding="utf-8")
+    assert "placeholder_tokens" in payload
+    # The fixture's own .slopcheck.yaml was picked up from the inferred root.
+    assert "forbidden_import_edges" in payload
+
+
+def test_scan_path_outside_repo_root_errors(tmp_path: Path) -> None:
+    fixture_root = Path("tests/fixtures/sample_repo").resolve()
+
+    result = runner.invoke(
+        app,
+        ["scan", str(fixture_root), "--repo-root", str(tmp_path), "--fail-on", "none"],
+    )
+
+    assert result.exit_code == 2
+    assert "outside repo root" in result.output

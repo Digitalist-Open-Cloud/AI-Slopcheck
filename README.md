@@ -1,13 +1,13 @@
 # doc-ai-slopcheck
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Rules](https://img.shields.io/badge/rules-72-blue)]()
+[![Rules](https://img.shields.io/badge/rules-75-blue)]()
 
-**Deterministic scanner for AI-style code failures. 72 rules. No LLM. No backend.**
+**Deterministic scanner for AI-style code failures. 75 rules. No LLM. No backend.**
 
 Digitalist fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer published.
 
-> Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, hallucinated placeholders, hardcoded secrets, and 68 more patterns across Python, JS/TS, Go, C/C++, SQL, and Markdown.
+> Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, hallucinated placeholders, hardcoded secrets, and 70 more patterns across Python, JS/TS, PHP, Go, C/C++, SQL, and Markdown.
 
 ---
 
@@ -37,24 +37,26 @@ doc-ai-slopcheck scan . --changed-files git --fail-on warning
 
 | Category | Rules | Examples |
 |----------|:-----:|---------|
-| **AI Detection** | 15 | Stub functions, instruction comments, conversational bleed, identity refusals |
+| **AI Detection** | 16 | Stub functions, instruction comments, plan/task IDs in comments, conversational bleed, identity refusals |
 | **Security** | 7 | Hardcoded secrets, SQL injection, XSS, weak hashing, obfuscated code |
 | **JavaScript / Node** | 11 | await-in-loop, unguarded JSON.parse, loose equality, React antipatterns |
 | **Go** | 3 | Ignored errors, missing defer, wrong error wrapping |
+| **PHP / Drupal** | 2 + shared | Stub functions, raw `$_GET`/`$_POST` into eval/shell/SQL/echo; plus PHP support in debug (incl. devel `dpm`), SQL, obfuscation, empty catch, large functions, duplication |
 | **Python** | 1 | Mutable default arguments |
 | **Cross-Language** | 17 | Debug code, unreachable code, deep inheritance, dangerous shell in markdown |
 | **Data-Flow** | 4 | Contradictory null checks, lock safety, IDOR risk, thread-unsafe globals |
-| **Quality** | 9 | Deep nesting, large functions, duplication (opt-in) |
+| **Quality** | 9 | Large functions (>150 lines), copy-pasted code across files, plus opt-in deep nesting |
 | **API Contract** | 1 | Removed routes, deprecated endpoints |
 | **Repo-Specific** | 1 | Import boundary violations |
 | **Meta** | 1 | Unused suppression directives |
 
 ## Features
 
-- **72 deterministic rules** — no LLM, no network, no randomness
-- **6 languages** — Python, JS/TS, Go, C/C++, SQL, Markdown
-- **Inline suppression** — `# slopcheck: ignore[rule_id]`
+- **75 deterministic rules** — no LLM, no network, no randomness
+- **7 languages** — Python, JS/TS, PHP (incl. Drupal .module/.inc/.install/.theme), Go, C/C++, SQL, Markdown
+- **Inline suppression** — `# slopcheck: ignore[rule_id]`, or `# slopcheck: ignore-next[duplicate_code]` above a copied block
 - **SARIF output** — integrates with GitHub Security tab
+- **HTML report** — standalone, shareable page (`doc-ai-slopcheck html findings.json > report.html`)
 - **Diff-only mode** — scan only changed files (`--changed-files git`)
 - **Baselines** — suppress existing findings, fail only on new ones
 - **API snapshots** — detect removed API routes
@@ -101,6 +103,7 @@ doc-ai-slopcheck scan . --baseline .slopcheck/baseline.json --fail-on warning
 | `doc-ai-slopcheck summary <file>` | Markdown summary |
 | `doc-ai-slopcheck github-annotations <file>` | GitHub workflow annotations |
 | `doc-ai-slopcheck sarif <file>` | SARIF v2.1.0 output |
+| `doc-ai-slopcheck html <file> > report.html` | Standalone HTML report |
 | `doc-ai-slopcheck create-baseline <file>` | Create fingerprint baseline |
 | `doc-ai-slopcheck api-snapshot` | Snapshot API routes for contract checks |
 
@@ -154,6 +157,7 @@ doc_ai_slopcheck/
 ├── models.py              — Finding, ScanResult (stable contract)
 ├── engine/
 │   ├── scanner.py         — Threaded orchestrator
+│   ├── duplication.py     — Cross-file copy-paste detector
 │   ├── suppression.py     — Inline ignore parser
 │   └── context_filter.py  — String/comment detector
 ├── parsers/

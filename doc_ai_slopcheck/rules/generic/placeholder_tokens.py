@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -12,6 +13,7 @@ TOKEN_TEMPLATE = r"\b({tokens})\b"
 
 class PlaceholderTokensRule(Rule):
     rule_id = "placeholder_tokens"
+    code_only = False
     title = "Placeholder token found"
     supported_extensions = {
         ".py",
@@ -29,7 +31,7 @@ class PlaceholderTokensRule(Rule):
         ".cpp",
         ".h",
         ".hpp",
-    }
+    } | PHP_EXTENSIONS
 
     def __init__(self) -> None:
         self._cached_pattern: re.Pattern[str] | None = None

@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -15,16 +16,23 @@ _TEST_PATH_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Matches eval( or exec( not preceded by a word char
-_EVAL_RE = re.compile(r"(?<!\w)(eval|exec)\s*\(")
+# Matches bare eval( or exec(; method calls like /re/.exec(s) are not eval
+_EVAL_RE = re.compile(r"(?<![\w.$>:])(?<!function )(eval|exec|create_function)\s*\(")
+# PHP's exec() runs a shell command (see php_user_input_sink), not code.
+_PHP_EVAL_RE = re.compile(r"(?<![\w.$>:])(?<!function )(eval|create_function)\s*\(")
 # JS Function constructor: new Function(
 _FUNCTION_CTOR_RE = re.compile(r"\bnew\s+Function\s*\(")
 # atob( -- base64 decode in browser JS
 _ATOB_RE = re.compile(r"\batob\s*\(")
 # base64 decode calls (Python)
-_B64_DECODE_RE = re.compile(r"\bb64decode\s*\(|base64\.b64decode\s*\(")
+_B64_DECODE_RE = re.compile(
+    r"\bb64decode\s*\(|base64\.b64decode\s*\("
+    r"|\b(?:base64_decode|gzinflate|gzuncompress|gzdecode|str_rot13)\s*\("  # PHP
+)
 # Hex escape sequences -- flag if more than 3 occur on one line
 _HEX_ESCAPE_RE = re.compile(r"\\x[0-9a-fA-F]{2}")
+# Python bytes literals hold binary data (file signatures), not hidden code.
+_BYTES_LITERAL_RE = re.compile(r"\b[bB][rR]?(?:\"[^\"]*\"|'[^']*')")
 _COMMENT_RE = re.compile(r"^\s*(?:#|//|/\*|\*)")
 
 
@@ -33,7 +41,7 @@ class ObfuscatedCodeRule(Rule):
     title = "Potentially obfuscated code detected"
     supported_extensions = None  # checked per-extension in scan_file
 
-    _EXTENSIONS = frozenset({".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs"})
+    _EXTENSIONS = frozenset({".py", ".js", ".jsx", ".ts", ".tsx", ".go", ".rs"}) | PHP_EXTENSIONS
 
     def scan_file(
         self,
@@ -65,21 +73,26 @@ class ObfuscatedCodeRule(Rule):
             if avg_line_len > 200:
                 return []
 
+        is_php = Path(relative_path).suffix.lower() in PHP_EXTENSIONS
+        eval_re = _PHP_EVAL_RE if is_php else _EVAL_RE
         findings: list[Finding] = []
         for lineno, line in enumerate(lines, start=1):
             if _COMMENT_RE.match(line):
                 continue
 
+            # Decoding base64 is normal (keys, auth headers); it only signals
+            # obfuscation when the decoded data is executed.
+            decodes = _ATOB_RE.search(line) or _B64_DECODE_RE.search(line)
             label: str | None = None
-            if _EVAL_RE.search(line):
-                label = "eval/exec call"
-            elif _FUNCTION_CTOR_RE.search(line):
-                label = "Function() constructor"
-            elif _ATOB_RE.search(line):
-                label = "atob() base64 decode"
-            elif _B64_DECODE_RE.search(line):
-                label = "base64 decode call"
-            elif len(_HEX_ESCAPE_RE.findall(line)) > 6:
+            if eval_re.search(line) or _FUNCTION_CTOR_RE.search(line):
+                label = (
+                    "eval/exec of base64-decoded data"
+                    if decodes
+                    else "eval/exec call"
+                    if eval_re.search(line)
+                    else "Function() constructor"
+                )
+            elif len(_HEX_ESCAPE_RE.findall(_BYTES_LITERAL_RE.sub("", line))) > 6:
                 # Raised from 3 to 6 — standard string encoding often has a few hex escapes.
                 label = "dense hex escape sequences"
 
