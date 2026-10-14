@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import ast
-import io
 import re
-import tokenize
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.context_filter import c_style_comments, php_comments
+from doc_ai_slopcheck.engine.context_filter import comments_for
 from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
@@ -24,28 +21,6 @@ _URL_RE = re.compile(r"\b\w+://\S+")
 _EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
 
 
-def _python_comments(content: str) -> list[tuple[int, str]]:
-    out: list[tuple[int, str]] = []
-    try:
-        for tok in tokenize.generate_tokens(io.StringIO(content).readline):
-            if tok.type == tokenize.COMMENT:
-                out.append((tok.start[0], tok.string))
-        tree = ast.parse(content)
-    except (tokenize.TokenError, SyntaxError, ValueError):
-        return out
-    for node in ast.walk(tree):
-        if isinstance(
-            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
-        ) and node.body:
-            first = node.body[0]
-            if (
-                isinstance(first, ast.Expr)
-                and isinstance(first.value, ast.Constant)
-                and isinstance(first.value.value, str)
-            ):
-                for offset, line in enumerate(first.value.value.splitlines()):
-                    out.append((first.lineno + offset, line))
-    return out
 
 
 
@@ -69,14 +44,9 @@ class PlanReferenceCommentRule(Rule):
 
         patterns = [re.compile(p) for p in rule_config.patterns]
         ignore = set(rule_config.ignore)
-        is_py = relative_path.endswith(".py")
-        is_php = Path(relative_path).suffix.lower() in PHP_EXTENSIONS
-        if is_py:
-            comments = _python_comments(content)
-        elif is_php:
-            comments = php_comments(content)
-        else:
-            comments = c_style_comments(content)
+        ext = Path(relative_path).suffix.lower()
+        is_php = ext in PHP_EXTENSIONS
+        comments = comments_for(content, ext)
 
         hits: list[tuple[int, str, str]] = []  # (line, id, comment)
         for line, text in comments:

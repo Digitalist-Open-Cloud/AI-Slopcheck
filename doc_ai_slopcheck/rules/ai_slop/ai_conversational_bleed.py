@@ -28,6 +28,14 @@ CODE_FENCE_RE = re.compile(
 )
 
 
+# Pictographs, plus the dingbats chat output favours (✅ ❌ ⚠️ ✨ ⭐ ✔ ➡).
+_EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\u2705\u274C\u26A0\u2728\u2B50\u2714\u27A1]")
+_MESSAGE_RE = re.compile(
+    r"\b(?:print|console\.\w+|log(?:ger)?\.\w+|logging\.\w+|error_log|Drupal::logger"
+    r"|raise|throw)\b"
+)
+
+
 class AiConversationalBleedRule(Rule):
     rule_id = "ai_conversational_bleed"
     code_only = False
@@ -102,6 +110,24 @@ class AiConversationalBleedRule(Rule):
                         evidence=stripped,
                         suggestion="Remove the markdown fence — only the code should remain.",
                         tags=["ai-bleed", "markdown"],
+                    )
+                )
+
+            # Emoji in comments, docstrings and log/error messages is chat
+            # styling; in UI text it can be deliberate, so that is left alone.
+            if _EMOJI_RE.search(line) and (
+                line_number in prose_lines or _MESSAGE_RE.search(line)
+            ):
+                findings.append(
+                    self.build_finding(
+                        relative_path=relative_path,
+                        line=line_number,
+                        message="Emoji in a comment or log/error message, a chat-style habit.",
+                        severity=Severity.NOTE,
+                        confidence=Confidence.HIGH,
+                        evidence=stripped[:120],
+                        suggestion="Say it in words: 'Warning:', 'Done', 'Failed'.",
+                        tags=["ai-bleed", "emoji"],
                     )
                 )
 
