@@ -115,8 +115,8 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: '3.12' }
       - run: pip install doc-ai-slopcheck
       - run: doc-ai-slopcheck scan . --output findings.json --fail-on warning
@@ -126,10 +126,10 @@ jobs:
           doc-ai-slopcheck sarif findings.json > results.sarif
           doc-ai-slopcheck html findings.json > slopcheck-report.html
       - if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with: { sarif_file: results.sarif }
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with: { name: slopcheck-report, path: slopcheck-report.html }
 ```
 
