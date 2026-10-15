@@ -124,7 +124,7 @@ jobs:
       - if: always()
         run: |
           doc-ai-slopcheck github-annotations findings.json
-          doc-ai-slopcheck sarif findings.json | jq 'del(.runs[].results[]?.fixes)' > results.sarif
+          doc-ai-slopcheck sarif findings.json > results.sarif
           doc-ai-slopcheck html findings.json > slopcheck-report.html
       - if: always()
         uses: github/codeql-action/upload-sarif@v4
