@@ -112,6 +112,9 @@ on: [pull_request]
 jobs:
   scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # required by upload-sarif
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
