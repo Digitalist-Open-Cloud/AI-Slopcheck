@@ -100,10 +100,11 @@ def test_sarif_empty_findings():
     assert parsed["runs"][0]["tool"]["driver"]["rules"] == []
 
 
-def test_sarif_includes_suggestion_as_fix():
+def test_sarif_includes_suggestion_in_message():
     result = _make_result([
         _make_finding(suggestion="Fix this by doing X")
     ])
     parsed = json.loads(render_sarif(result))
-    fixes = parsed["runs"][0]["results"][0]["fixes"]
-    assert fixes[0]["description"]["text"] == "Fix this by doing X"
+    res = parsed["runs"][0]["results"][0]
+    assert "fixes" not in res  # schema requires artifactChanges on fixes
+    assert res["message"]["text"].endswith("Suggestion: Fix this by doing X")

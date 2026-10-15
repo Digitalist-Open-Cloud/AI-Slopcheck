@@ -56,12 +56,9 @@ def render_sarif(scan_result: ScanResult) -> str:
             loc = result["locations"][0]["physicalLocation"]
             loc["region"]["startColumn"] = finding.location.column
 
+        # SARIF "fixes" require artifactChanges; a text-only suggestion goes in the message.
         if finding.suggestion:
-            result["fixes"] = [
-                {
-                    "description": {"text": finding.suggestion},
-                }
-            ]
+            result["message"]["text"] += f"\n\nSuggestion: {finding.suggestion}"
 
         results.append(result)
 
