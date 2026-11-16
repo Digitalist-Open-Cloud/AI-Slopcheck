@@ -4,13 +4,13 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "doc-ai-slopcheck"
-version = "1.2.10"
+version = "1.2.11"
 description = "Deterministic scanner for AI-style code failures. 81 rules for Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 authors = [
-  { name = "Euraika", email = "info@euraika.net" }
+  { name = "Mikke Schirén", email = "mikke.schiren@digitalist.com" }
 ]
 keywords = ["static-analysis", "linter", "ai-code", "code-quality", "security", "github-actions"]
 classifiers = [

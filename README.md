@@ -8,7 +8,7 @@
 
 **Deterministic scanner for AI-style code failures. 81 rules. No LLM. No backend.**
 
-Digitalist Open Cloud fork of [ai-slopcheck](https://github.com/Euraika-Labs/ai_slopcheck) by Euraika, which is no longer public.
+Digitalist Open Cloud fork of [ai-slopcheck](https://github.com/Digitalist-Open-Cloud/AI-Slopcheck).
 
 > Catches the mistakes AI coding assistants leave behind — stub functions, silent error handling, copy-pasted code, plan/ticket IDs in comments, hallucinated placeholders, hardcoded secrets, and more across Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL, and Markdown.
 
@@ -270,4 +270,4 @@ Python 3.12 and 3.13 (`.github/workflows/tests.yml`).
 
 ## License
 
-[MIT](LICENSE) — Euraika 2026. Fork maintained by Digitalist Open Cloud.
+[MIT](LICENSE) — Copyright Euraika 2026. Fork maintained by Digitalist Open Cloud (Mikke Schirén).
