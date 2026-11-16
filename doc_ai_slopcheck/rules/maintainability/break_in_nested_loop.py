@@ -21,6 +21,9 @@ _GO_FOR_RE = re.compile(r"\bfor\b")
 # Switch statement — break inside switch is correct JS/Go, not a loop break.
 _SWITCH_RE = re.compile(r"\bswitch\s*[\(\{]|\bswitch\b")
 
+# A function or closure body starts a new scope: loops outside it don't count.
+_FUNC_RE = re.compile(r"\bfunc\b|\bfunction\b|=>\s*\{")
+
 # A standalone `break` statement (not `break <label>` in Go, but we flag those too)
 _BRACE_BREAK_RE = re.compile(r"\bbreak\b")
 
@@ -114,6 +117,8 @@ class BreakInNestedLoopRule(Rule):
         loop_stack: list[int] = []
         # Stack of brace depths where a switch body starts
         switch_stack: list[int] = []
+        # Stack of brace depths where a function body starts
+        func_stack: list[int] = []
 
         for lineno, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
@@ -127,6 +132,9 @@ class BreakInNestedLoopRule(Rule):
             if _SWITCH_RE.search(line):
                 switch_stack.append(brace_depth + opens)
 
+            if opens and _FUNC_RE.search(line):
+                func_stack.append(brace_depth + opens)
+
             # Detect loop keyword before counting opening brace on this line
             if _BRACE_FOR_WHILE_RE.search(line) or _GO_FOR_RE.search(line):
                 loop_stack.append(brace_depth + opens)
@@ -134,7 +142,9 @@ class BreakInNestedLoopRule(Rule):
             brace_depth += opens
 
             # Check for break — only flag if inside nested loops AND not inside a switch
-            if _BRACE_BREAK_RE.search(line) and len(loop_stack) >= 2:
+            scope = func_stack[-1] if func_stack else 0
+            depth = sum(1 for loop in loop_stack if loop > scope)
+            if _BRACE_BREAK_RE.search(line) and depth >= 2:
                 # If we are inside a switch body, break targets the switch, not a loop.
                 inside_switch = bool(
                     switch_stack and switch_stack[-1] >= loop_stack[-1]
@@ -145,7 +155,7 @@ class BreakInNestedLoopRule(Rule):
                             relative_path=relative_path,
                             lineno=lineno,
                             line=stripped,
-                            depth=len(loop_stack),
+                            depth=depth,
                         )
                     )
 
@@ -156,6 +166,8 @@ class BreakInNestedLoopRule(Rule):
             # Pop loops whose body has now closed
             while loop_stack and brace_depth < loop_stack[-1]:
                 loop_stack.pop()
+            while func_stack and brace_depth < func_stack[-1]:
+                func_stack.pop()
             # Pop switches whose body has now closed
             while switch_stack and brace_depth < switch_stack[-1]:
                 switch_stack.pop()

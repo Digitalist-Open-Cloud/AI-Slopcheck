@@ -30,6 +30,7 @@ class StubFunctionBodyGoRule(Rule):
     config_key = "stub_function_body"
     title = "Stub function body (Go)"
     supported_extensions = {".go"}
+    skip_in_tests = True
 
     def scan_file(
         self,
@@ -123,14 +124,22 @@ class StubFunctionBodyGoRule(Rule):
         started = False
 
         for k in range(j, min(j + 30, len(lines))):
-            for ch in lines[k]:
+            body_open = -1
+            for idx, ch in enumerate(lines[k]):
                 if ch == "{":
+                    if brace_depth == 0:
+                        body_open = idx
                     brace_depth += 1
                     started = True
                 elif ch == "}":
                     brace_depth -= 1
 
             if started and brace_depth == 0:
+                if k == j:
+                    # One-line function: the body sits between the braces.
+                    inner = lines[k][body_open + 1 : lines[k].rindex("}")].strip()
+                    if inner:
+                        body.append(inner)
                 break
 
             if started and brace_depth > 0 and k > j:

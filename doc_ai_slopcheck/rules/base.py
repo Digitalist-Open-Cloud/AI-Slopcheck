@@ -21,6 +21,9 @@ class Rule(ABC):
     # Findings in test code drop one severity level unless the rule is about
     # tests themselves (e.g. tests that can't fail).
     downgrade_in_tests: bool = True
+    # Rules that mean nothing in test code (fixtures, mocks, setup SQL) skip
+    # files matching config.test_paths instead of being downgraded.
+    skip_in_tests: bool = False
 
     @property
     def category(self) -> str:

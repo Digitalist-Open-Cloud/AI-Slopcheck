@@ -59,6 +59,7 @@ class StubFunctionBodyJsRule(Rule):
     config_key = "stub_function_body"
     title = "Stub function body (JS/TS)"
     supported_extensions = {".js", ".jsx", ".ts", ".tsx"}
+    skip_in_tests = True
 
     def scan_file(
         self,

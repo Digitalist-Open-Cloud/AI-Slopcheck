@@ -53,6 +53,7 @@ class StubFunctionBodyPhpRule(Rule):
     rule_id = "stub_function_body_php"
     title = "Stub function body (PHP)"
     supported_extensions = PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,

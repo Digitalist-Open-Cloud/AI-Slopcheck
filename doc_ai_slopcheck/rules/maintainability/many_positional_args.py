@@ -15,7 +15,19 @@ _CALL_RE = re.compile(r"\b(\w+)\s*\(([^)]*)\)")
 
 # SQL keywords that look like function calls but aren't (VALUES(a,b,c), INSERT, etc.)
 _DEFINITION_RE = re.compile(r"\b(?:def|function|fn|func)\s+&?\s*$")
-_NOT_CALLS = frozenset({"use", "func", "__construct", "__init__"})
+# Not calls, or calls whose signature the caller doesn't control: PHP's
+# array() and the standard functions that take more than six arguments.
+_NOT_CALLS = frozenset({
+    "use", "func", "__construct", "__init__", "array", "list",
+    "imagecopyresampled", "imagecopyresized", "imagecopymerge", "imagecopymergegray",
+    "imagefilledarc", "imagearc", "imageellipse", "imagefilledellipse", "imagettftext",
+    "imagefttext", "imagesetpixel", "imageline", "imagerectangle", "imagefilledrectangle",
+    "mktime", "gmmktime", "substr_compare", "date_create", "checkdate",
+})
+# Every argument a string literal: a list of names, not a call to simplify.
+_ALL_STRINGS_RE = re.compile(r"""^\s*(?:(?:'[^']*'|"[^"]*")\s*,\s*)*(?:'[^']*'|"[^"]*")\s*$""")
+# A command-line flag among the arguments: the call builds a CLI invocation.
+_CLI_FLAG_RE = re.compile(r"""['"]--?[a-z]""")
 
 _SQL_FUNC_NAMES = frozenset({
     "VALUES", "values", "INSERT", "insert", "UPDATE", "update",
@@ -96,6 +108,7 @@ class ManyPositionalArgsRule(Rule):
     rule_id = "many_positional_args"
     title = "Too many positional arguments in function call"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx"} | PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,
@@ -144,6 +157,8 @@ class ManyPositionalArgsRule(Rule):
                 if "(" in args_str or ")" in args_str:
                     continue
 
+                if _ALL_STRINGS_RE.match(args_str) or _CLI_FLAG_RE.search(args_str):
+                    continue
                 count = _count_positional_args(args_str)
                 if count > max_positional:
                     evidence = m.group(0).strip()

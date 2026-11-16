@@ -33,6 +33,7 @@ class StubFunctionBodyRule(Rule):
     rule_id = "stub_function_body"
     title = "Stub function body"
     supported_extensions = {".py"}
+    skip_in_tests = True
 
     def scan_file(
         self,

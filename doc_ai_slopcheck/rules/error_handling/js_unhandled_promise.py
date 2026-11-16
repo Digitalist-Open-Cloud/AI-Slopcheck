@@ -11,15 +11,19 @@ _THEN_RE = re.compile(r"\.then\s*\(")
 _CATCH_RE = re.compile(r"\.catch\s*\(")
 
 
-# Statement text before the first .then: awaited or returned promises reject
-# into the caller, which handles them.
-_HANDED_ON_RE = re.compile(r"\bawait\b|\breturn\b|=>\s*$|=>\s*[\w(]")
+# Statement text before the first .then: awaited, returned, assigned or
+# property-valued promises reject into whoever consumes them; `void` marks a
+# deliberate fire-and-forget (as eslint's no-floating-promises does).
+_HANDED_ON_RE = re.compile(
+    r"\bawait\b|\breturn\b|\bvoid\b|=>\s*$|=>\s*[\w(]|(?<![=!<>])=(?!=)|^\s*\w+\s*:",
+    re.MULTILINE,
+)
 _STATEMENT_END_RE = re.compile(r"[;{},]\s*$")  # , ends object entries and arguments
 
 
 def _caller_handles(lines: list[str], lineno: int) -> bool:
     start = lineno - 1
-    while start > 0 and lineno - start < 5 and not _STATEMENT_END_RE.search(lines[start - 1]):
+    while start > 0 and lineno - start < 12 and not _STATEMENT_END_RE.search(lines[start - 1]):
         start -= 1
     statement = "\n".join(lines[start:lineno])
     before = statement[: statement.find(".then")]  # up to the chain's first .then

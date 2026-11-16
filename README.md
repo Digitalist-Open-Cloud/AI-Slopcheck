@@ -53,7 +53,7 @@ Rules live in seven groups (`doc-ai-slopcheck rules` lists them all, with on/off
 
 | Group | Rules | Examples |
 | ----- | :---: | -------- |
-| **ai_slop** | 21 | Stub functions (Python/JS/Go/PHP), tests that cannot fail, chat bleed and emoji, identity refusals, plan/task IDs and history narrated in comments, comment essays, placeholders, hallucinated values, debug code left in |
+| **ai_slop** | 21 | Stub functions (Python/JS/Go/PHP), tests that cannot fail, chat bleed, emoji and em-dash prose, identity refusals, plan/task IDs, spec sections and history narrated in comments, comment essays, placeholders, hallucinated values, debug code left in |
 | **security** | 11 | Hardcoded secrets, SQL built from strings, XSS (`dangerouslySetInnerHTML`, dynamic `innerHTML`), raw `$_GET`/`$_POST` into eval/shell/SQL/echo, obfuscation, weak hashing, ReDoS |
 | **error_handling** | 11 | Empty catch/except, ignored Go errors, unhandled promises, unguarded `JSON.parse`, contradictory null checks, unreachable code |
 | **concurrency** | 6 | Locks without release, thread-unsafe globals, missing `defer`, timers without cleanup, use-after-free |
@@ -85,8 +85,9 @@ the level that makes `scan` exit with status 1.
 
 Findings in test and mock code (`tests/`, `mocks/`, `fixtures/`, `test_*.py`,
 `*.test.ts`, `*Test.php`, …) are lowered one level — error to warning, warning
-to note — and tagged `test-code`. Set `test_paths: []` in the config to treat
-test code like production code.
+to note — and tagged `test-code`. Rules that mean nothing in tests (SQL
+concatenation, IDOR, stub bodies, duplicated setup, …) are not run there at
+all. Set `test_paths: []` in the config to treat test code like production code.
 
 SQL built from strings is an `error` when a value is spliced in, and a
 `warning` when only a table or column name is (`FROM $table … WHERE id = ?`),

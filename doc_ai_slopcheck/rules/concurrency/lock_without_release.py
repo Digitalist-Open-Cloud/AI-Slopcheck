@@ -16,11 +16,11 @@ _PY_TRY_RE = re.compile(r"^\s*try\s*:")
 _PY_FINALLY_RE = re.compile(r"^\s*finally\s*:")
 _PY_RELEASE_RE = re.compile(r"\b(\w+)\.release\s*\(")
 
-# Go: mu.Lock() call — capture the mutex variable name
-_GO_LOCK_RE = re.compile(r"\b(\w+)\.Lock\s*\(\s*\)")
+# Go: mu.Lock() or s.mu.Lock() — capture the whole receiver expression
+_GO_LOCK_RE = re.compile(r"([\w.]+)\.Lock\s*\(\s*\)")
 
 # Go safe patterns: defer mu.Unlock() or defer mu.RUnlock()
-_GO_DEFER_UNLOCK_RE = re.compile(r"\bdefer\s+(\w+)\.(?:R)?[Uu]nlock\s*\(\s*\)")
+_GO_DEFER_UNLOCK_RE = re.compile(r"\bdefer\s+([\w.]+)\.(?:R)?[Uu]nlock\s*\(\s*\)")
 
 _PY_LOOKAHEAD = 15
 _GO_LOOKAHEAD = 5
@@ -123,7 +123,8 @@ class LockWithoutReleaseRule(Rule):
             window = lines[i + 1 : i + 1 + _GO_LOOKAHEAD]
 
             has_defer_unlock = any(
-                _GO_DEFER_UNLOCK_RE.search(wl) and lock_var in wl for wl in window
+                (dm := _GO_DEFER_UNLOCK_RE.search(wl)) and dm.group(1) == lock_var
+                for wl in window
             )
             if has_defer_unlock:
                 continue

@@ -41,10 +41,6 @@ def test_detects_select_star_in_ts() -> None:
     assert len(findings) == 1
 
 
-def test_skips_test_files() -> None:
-    code = 'sql = "SELECT * FROM users"\n'
-    findings = _scan(code, path="tests/test_repo.py")
-    assert len(findings) == 0
 
 
 def test_detects_in_go_file() -> None:

@@ -16,7 +16,7 @@ def test_placeholder_tokens_rule_finds_todo() -> None:
     assert len(findings) == 1
     assert findings[0].rule_id == "placeholder_tokens"
     assert findings[0].location.line == 2
-    assert findings[0].severity.value == "warning"
+    assert findings[0].severity.value == "note"
 
 
 def test_placeholder_tokens_finds_multiple_tokens_on_same_line() -> None:

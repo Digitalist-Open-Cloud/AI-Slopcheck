@@ -6,7 +6,6 @@ from typing import NamedTuple
 
 from doc_ai_slopcheck.config import AppConfig
 from doc_ai_slopcheck.engine.context_filter import is_in_non_code_context, non_code_lines
-from doc_ai_slopcheck.engine.repo_files import is_ignored
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -67,6 +66,7 @@ class TypescriptAnyAbuseRule(Rule):
     rule_id = "typescript_any_abuse"
     title = "TypeScript type-safety bypass"
     supported_extensions = {".ts", ".tsx"}
+    skip_in_tests = True
     # @ts-ignore and friends live in comments; code patterns are checked per match.
     code_only = False
 
@@ -86,7 +86,6 @@ class TypescriptAnyAbuseRule(Rule):
         if (
             relative_path.endswith(".d.ts")
             or "@types/" in relative_path.lower()
-            or is_ignored(relative_path, config.test_paths)
         ):
             return []
         prose = non_code_lines(content, Path(relative_path).suffix.lower())

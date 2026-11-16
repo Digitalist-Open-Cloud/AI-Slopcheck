@@ -44,6 +44,7 @@ class LargeFunctionRule(Rule):
     rule_id = "large_function"
     title = "Function exceeds maximum line count"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,

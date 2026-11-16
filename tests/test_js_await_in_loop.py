@@ -87,16 +87,6 @@ def test_skips_non_js_ts_files() -> None:
     assert len(findings) == 0
 
 
-def test_skips_test_files() -> None:
-    code = """\
-for (const id of ids) {
-    const r = await fetch(id);
-}
-"""
-    findings = _scan(code, path="tests/service.test.ts")
-    assert len(findings) == 0
-
-
 def test_disabled_rule() -> None:
     config = AppConfig()
     config.rules.js_await_in_loop = JsAwaitInLoopConfig(enabled=False)

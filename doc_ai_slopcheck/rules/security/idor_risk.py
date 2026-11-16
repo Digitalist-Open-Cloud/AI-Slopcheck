@@ -61,6 +61,9 @@ _AUTH_CHECK_RE = re.compile(
     r")"
 )
 
+# IDOR is about object identifiers; a code, token or filter is not one.
+_ID_KEY_RE = re.compile(r"\b(?:id|uuid|pk|slug|user)\b|_id\b|Id\b", re.IGNORECASE)
+
 _LOOKAHEAD = 15
 _LOOKBACK = 5  # also check a few lines before the DB call
 
@@ -69,6 +72,7 @@ class IdorRiskRule(Rule):
     rule_id = "idor_risk"
     title = "Potential IDOR: request parameter used in DB call without visible auth check"
     supported_extensions = {".py", ".js", ".ts"}
+    skip_in_tests = True
 
     def scan_file(
         self,
@@ -90,7 +94,7 @@ class IdorRiskRule(Rule):
         findings: list[Finding] = []
 
         for i, line in enumerate(lines):
-            if not _PARAM_EXTRACT_RE.search(line):
+            if not _PARAM_EXTRACT_RE.search(line) or not _ID_KEY_RE.search(line):
                 continue
 
             # Look ahead for a DB call

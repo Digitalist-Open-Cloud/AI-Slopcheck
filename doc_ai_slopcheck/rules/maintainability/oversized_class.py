@@ -29,6 +29,7 @@ class OversizedClassRule(Rule):
     rule_id = "oversized_class"
     title = "Class with too many methods"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx"}
+    skip_in_tests = True
 
     def scan_file(
         self,

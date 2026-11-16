@@ -88,7 +88,7 @@ class PlaceholderTokensRule(Rule):
                         relative_path=relative_path,
                         line=line_number,
                         message=f"Found placeholder token `{token}` in source code.",
-                        severity=Severity.WARNING,
+                        severity=Severity.NOTE,
                         confidence=Confidence.HIGH,
                         evidence=token,
                         suggestion="Replace the placeholder with real logic or remove it.",

@@ -29,7 +29,10 @@ CODE_FENCE_RE = re.compile(
 
 
 # Pictographs, plus the dingbats chat output favours (✅ ❌ ⚠️ ✨ ⭐ ✔ ➡).
-_EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\u2705\u274C\u26A0\u2728\u2B50\u2714\u27A1]")
+_EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\u2705\u274C\u2728\u2B50\u2714\u27A1]")
+# Em dashes in comment prose. One can be typography; a file full of them is
+# chat-style writing.
+_EM_DASH_MIN = 3
 _MESSAGE_RE = re.compile(
     r"\b(?:print|console\.\w+|log(?:ger)?\.\w+|logging\.\w+|error_log|Drupal::logger"
     r"|raise|throw)\b"
@@ -72,6 +75,26 @@ class AiConversationalBleedRule(Rule):
         # Fences inside docstrings/comments are Markdown docs, not chat bleed.
         prose_lines = non_code_lines(content, Path(relative_path).suffix.lower())
         findings: list[Finding] = []
+        em_dash_lines = [
+            n for n, line in enumerate(content.splitlines(), start=1)
+            if n in prose_lines and "—" in line
+        ]
+        if len(em_dash_lines) >= _EM_DASH_MIN:
+            findings.append(
+                self.build_finding(
+                    relative_path=relative_path,
+                    line=em_dash_lines[0],
+                    message=(
+                        f"{len(em_dash_lines)} comment lines use an em dash (—), a chat-style "
+                        "prose habit."
+                    ),
+                    severity=Severity.NOTE,
+                    confidence=Confidence.MEDIUM,
+                    evidence=content.splitlines()[em_dash_lines[0] - 1].strip()[:120],
+                    suggestion="Write shorter sentences; use a comma, colon or full stop.",
+                    tags=["ai-bleed", "prose"],
+                )
+            )
         for line_number, line in enumerate(content.splitlines(), start=1):
             stripped = line.strip()
             if not stripped:

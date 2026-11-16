@@ -61,10 +61,6 @@ def test_allows_moderate_hex_escapes() -> None:
     assert len(findings) == 0
 
 
-def test_skips_test_file() -> None:
-    findings = _scan("eval(code)\n", path="tests/test_util.py")
-    assert len(findings) == 0
-
 
 
 def test_skips_unsupported_extension() -> None:

@@ -63,34 +63,31 @@ def test_code_rules_skip_comment_lines_but_comment_rules_do_not(tmp_path: Path) 
 
 
 def test_test_code_is_downgraded_one_level(tmp_path: Path) -> None:
-    sql = 'q = "SELECT * FROM users WHERE id = " + user_id\n'
-    root = _repo(tmp_path, {"app/db.py": sql, "app/tests/test_db.py": sql})
+    code = "try:\n    run()\nexcept Exception:\n    pass\n"
+    root = _repo(tmp_path, {"app/db.py": code, "app/tests/test_db.py": code})
     result = scan_paths(repo_root=root, targets=None, config=AppConfig())
-    by_path = {f.location.path: f for f in result.findings if f.rule_id == "sql_string_concat"}
-    assert by_path["app/db.py"].severity == "error"
-    assert by_path["app/tests/test_db.py"].severity == "warning"
+    by_path = {f.location.path: f for f in result.findings if f.rule_id == "bare_except_pass"}
+    assert by_path["app/db.py"].severity == "warning"
+    assert by_path["app/tests/test_db.py"].severity == "note"
     assert "test-code" in by_path["app/tests/test_db.py"].tags
 
     config = AppConfig(test_paths=[])
     result = scan_paths(repo_root=root, targets=None, config=config)
     assert all(
-        f.severity == "error" for f in result.findings if f.rule_id == "sql_string_concat"
+        f.severity == "warning" for f in result.findings if f.rule_id == "bare_except_pass"
     )
 
 
-def test_rules_that_skip_tests_follow_test_paths_setting() -> None:
-    from doc_ai_slopcheck.rules.ai_slop.debug_code_left import DebugCodeLeftRule
+def test_rules_that_skip_tests_follow_test_paths_setting(tmp_path: Path) -> None:
+    code = "breakpoint()\n"
+    root = _repo(tmp_path, {"tests/test_foo.py": code, "spec/helper.py": code, "qa/check.py": code})
 
-    def scan(path: str, config: AppConfig) -> list:
-        return DebugCodeLeftRule().scan_file(
-            repo_root=Path("."), relative_path=path, content="breakpoint()\n", config=config
-        )
+    def hits(config: AppConfig) -> set[str]:
+        result = scan_paths(repo_root=root, targets=None, config=config)
+        return {f.location.path for f in result.findings if f.rule_id == "debug_code_left"}
 
-    assert scan("tests/test_foo.py", AppConfig()) == []
-    assert scan("spec/helper.py", AppConfig()) == []
-    custom = AppConfig(test_paths=["qa/*"])
-    assert scan("qa/check.py", custom) == []
-    assert len(scan("tests/test_foo.py", custom)) == 1  # no longer a test path
+    assert hits(AppConfig()) == {"qa/check.py"}
+    assert hits(AppConfig(test_paths=["qa/*"])) == {"tests/test_foo.py", "spec/helper.py"}
 
 
 @pytest.mark.parametrize(

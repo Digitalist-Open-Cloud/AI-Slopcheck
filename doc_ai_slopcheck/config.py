@@ -224,13 +224,16 @@ class PlanReferenceCommentConfig(BaseModel):
             r"\b(?:Task|Phase|Milestone|Sprint|Fas|Uppgift)\s+#?[A-Z]?\d+(?:\.\d+)*\b",
             # Short plan IDs; skips versions (V2), lint codes (B023), character
             # ranges ([A-Z0-9]) and dotted names (Guideline1_1.H37).
-            r"(?<![-.\w])(?!V\d)[A-Z]\d{1,2}\b(?!-)",
+            r"(?<![-.\w])(?!V\d)[A-Z]\d{1,3}\b(?!-)",
+            # Sections of a spec or plan document (§4.1).
+            r"§\s*\d+(?:\.\d+)*",
         ]
     )
     # Real-world terms that look like plan IDs.
     ignore: list[str] = Field(
         default_factory=lambda: [
-            "S3", "V8", "A4", "C4", "F1", "G1", "T4", "C89", "C99", "C11",
+            "S3", "V8", "A3", "A4", "A5", "B2", "E5", "C4", "F1", "G1", "T4",
+            "C89", "C99", "C11", "K999",
             "P50", "P75", "P90", "P95", "P99",
             "H1", "H2", "H3", "H4", "H5", "H6", "L1", "L2", "L3",
             "M1", "M2", "M3", "M4", "Q1", "Q2", "Q3", "Q4",

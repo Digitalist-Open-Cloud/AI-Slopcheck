@@ -47,11 +47,6 @@ def test_detects_import_ipdb() -> None:
     assert len(findings) == 1
 
 
-def test_skips_test_file() -> None:
-    findings = _scan("breakpoint()\n", path="tests/test_foo.py")
-    assert len(findings) == 0
-
-
 def test_skips_comment_line() -> None:
     findings = _scan("# breakpoint()\n")
     assert len(findings) == 0

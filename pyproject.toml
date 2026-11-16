@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "doc-ai-slopcheck"
-version = "1.2.8"
+version = "1.2.10"
 description = "Deterministic scanner for AI-style code failures. 81 rules for Python, JS/TS, PHP (incl. Drupal), Go, C/C++, SQL."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -44,6 +44,7 @@ ruff = ">=0.6.0"
 testpaths = ["tests"]
 
 [tool.ruff]
+extend-exclude = ["tests/fixtures"]  # scanner input, not project code
 line-length = 100
 target-version = "py312"
 

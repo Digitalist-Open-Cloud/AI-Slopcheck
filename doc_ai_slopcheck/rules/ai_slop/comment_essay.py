@@ -89,6 +89,7 @@ class CommentEssayRule(Rule):
     code_only = False
     title = "Comments and docstrings outweigh the code"
     supported_extensions = {".py", ".go"} | _JS_EXTENSIONS | PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,

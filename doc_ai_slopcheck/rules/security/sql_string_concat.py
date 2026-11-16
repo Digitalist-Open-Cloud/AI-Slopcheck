@@ -59,7 +59,10 @@ def _dynamic_sql(node: ast.AST) -> bool:
             else:
                 values.append(part.value)  # FormattedValue
     elif isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
-        for side in (node.left, node.right):
+        sides = [node.left, node.right]
+        while isinstance(sides[0], ast.BinOp) and isinstance(sides[0].op, ast.Add):
+            sides[0:1] = [sides[0].left, sides[0].right]  # "a" + X + "b" nests left
+        for side in sides:
             if isinstance(side, ast.Constant) and isinstance(side.value, str):
                 literal.append(side.value)
             elif isinstance(side, ast.Tuple):
@@ -102,7 +105,16 @@ _NAME_POSITION_RE = re.compile(
 )
 
 
-_SQL_END_RE = re.compile(r"""["'`]\s*,""")
+_QUOTE_RE = re.compile(r"""["'`]""")
+# A spliced-in value that is, by its name, a table/column name or a SQL
+# fragment built elsewhere ($table, $idCol, $whereClause, $this->tokenTable),
+# not a raw value. Names and fragments are still reported, as a warning.
+_NAME_LIKE_RE = re.compile(
+    r"""(?:['"`]\s*[.+]\s*)?\$?(?:this->|self::|static::)|"""
+    r"""(?:['"`]\s*[.+]\s*)?\$\w*(?:[Tt]able|[Cc]ol(?:umn)?s?|[Ff]ields?|[Cc]lause|[Ww]here|"""
+    r"""[Ss]ql|[Pp]laceholders?|[Ss]elect|[Ff]rom|[Jj]oins?|[Pp]arts|[Cc]ondition|[Oo]rder)\b|"""
+    r"""(?:['"`]\s*[.+]\s*)?\$\w+\[['"]sql['"]\]"""
+)
 # Class or global constants (Writer::DONE, MAX_ROWS) can't carry user input.
 _CONSTANT_EXPR_RE = re.compile(r"\s*(?:[\w\\]*::)?[A-Z_][A-Z0-9_]*\b(?!\s*\()")
 _SQL_START_RE = re.compile(r"\b(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b", re.IGNORECASE)
@@ -114,21 +126,28 @@ def _names_only(line: str) -> bool:
     sql_start = _SQL_START_RE.search(line)
     if not sql_start:
         return False
-    # The SQL text ends at a closing quote followed by a comma; what follows
-    # ("...= ?", $login) are bound parameters, not spliced-in values.
-    end = _SQL_END_RE.search(line, sql_start.start())
-    stop = end.start() if end else len(line)
+    # The SQL text ends where the string's own quote is followed by a comma;
+    # what follows ("...= ?", $login) are bound parameters, not spliced-in
+    # values. Other quote characters inside the string (`col`, 'x') don't count.
+    quotes = _QUOTE_RE.findall(line, 0, sql_start.start())
+    quote = quotes[-1] if quotes else "\""
+    end = re.search(re.escape(quote) + r"\s*,", line[sql_start.start():])
+    stop = sql_start.start() + end.start() if end else len(line)
     sites = [
         m for m in _INSERTION_RE.finditer(line, sql_start.start(), stop)
         if not _CONSTANT_EXPR_RE.match(line, m.end() - 1)
     ]
-    return bool(sites) and all(_NAME_POSITION_RE.search(line[: m.start()]) for m in sites)
+    return bool(sites) and all(
+        _NAME_POSITION_RE.search(line[: m.start()]) or _NAME_LIKE_RE.match(line, m.start())
+        for m in sites
+    )
 
 
 class SqlStringConcatRule(Rule):
     rule_id = "sql_string_concat"
     title = "SQL built by string concatenation"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,

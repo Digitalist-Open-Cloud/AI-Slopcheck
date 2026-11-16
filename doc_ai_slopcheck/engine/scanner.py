@@ -64,6 +64,8 @@ def _scan_single_file(
     if config.skip_generated and is_generated(content):
         return [], 0, 0
     suppressions = parse_suppressions(content)
+    if is_ignored(relative_path, config.test_paths):
+        applicable_rules = [r for r in applicable_rules if not r.skip_in_tests]
 
     findings: list[Finding] = []
     rule_errors = 0
@@ -153,7 +155,11 @@ def scan_paths(
                 total_suppressed += suppressed
 
     dup_findings, dup_suppressed = find_duplicates(
-        repo_root, files, config.rules.duplicate_code, skip_generated=config.skip_generated
+        repo_root,
+        files,
+        config.rules.duplicate_code,
+        skip_generated=config.skip_generated,
+        test_paths=config.test_paths,
     )
     all_findings.extend(dup_findings)
     total_suppressed += dup_suppressed

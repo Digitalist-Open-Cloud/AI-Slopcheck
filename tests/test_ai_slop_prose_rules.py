@@ -66,9 +66,17 @@ def test_native_alternative() -> None:
     assert [f.location.line for f in _scan(NativeAlternativeRule(), py, "src/a.py")] == [1, 2]
 
 
+def test_em_dashes_in_comments_reported_once_per_file() -> None:
+    comment = "# The cache — never the store — answers first — see below.\n"
+    code = "LABEL = 'a — b'\n" + comment * 3
+    findings = _scan(AiConversationalBleedRule(), code, "src/x.py")
+    assert [f.location.line for f in findings if "prose" in f.tags] == [2]
+    assert _scan(AiConversationalBleedRule(), comment * 2, "src/x.py") == []
+
+
 def test_emoji_in_comments_and_logs_not_ui_text() -> None:
     code = (
-        '"""⚠️ Fail-closed is inverted here."""\n'
+        '"""🚀 Fail-closed is inverted here."""\n'
         'logger.info("✅ done")\n'
         'TITLE = "🎉 Welcome"\n'  # UI text: allowed
     )

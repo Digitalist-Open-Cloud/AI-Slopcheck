@@ -26,6 +26,11 @@ def test_flags_plan_ids_in_comments_and_docstrings_once_per_file() -> None:
     assert "P13, Task 5, K3" in findings[0].message
 
 
+def test_spec_sections_count_as_plan_references() -> None:
+    findings = _scan("# Fail closed here (spec §4.1); the route checks §12 first.\n")
+    assert len(findings) == 1 and "§12, §4.1" in findings[0].message
+
+
 def test_ignores_code_strings_directives_urls_versions() -> None:
     code = (
         'BUCKET = "P13"  # noqa: B008, E501\n'

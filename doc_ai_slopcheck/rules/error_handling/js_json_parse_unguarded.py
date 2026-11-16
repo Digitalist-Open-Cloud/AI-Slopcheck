@@ -29,6 +29,7 @@ class JsJsonParseUnguardedRule(Rule):
     rule_id = "js_json_parse_unguarded"
     title = "Unguarded JSON.parse call"
     supported_extensions = {".js", ".jsx", ".ts", ".tsx"}
+    skip_in_tests = True
 
     def scan_file(
         self,

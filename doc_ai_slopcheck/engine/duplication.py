@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from doc_ai_slopcheck.config import DuplicateCodeConfig
-from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS, is_generated
+from doc_ai_slopcheck.engine.repo_files import DEFAULT_CODE_EXTENSIONS, is_generated, is_ignored
 from doc_ai_slopcheck.engine.suppression import is_suppressed, parse_suppressions
 from doc_ai_slopcheck.models import Confidence, Finding, Location, Severity
 from doc_ai_slopcheck.rules.base import Rule
@@ -29,6 +29,8 @@ _IMPORT_RE = re.compile(
 )
 _WS_RE = re.compile(r"\s+")
 _MAX_LINE = 400  # minified/generated lines are not hand-written copies
+# Framework-shaped files that are copies by design.
+_MIGRATION_RE = re.compile(r"(?:^|/)(?:migrations|alembic)/")
 
 
 def _normalise(content: str) -> list[tuple[int, str]]:
@@ -48,6 +50,7 @@ def find_duplicates(
     config: DuplicateCodeConfig,
     *,
     skip_generated: bool = False,
+    test_paths: list[str] = (),
 ) -> tuple[list[Finding], int]:
     """Return (findings, suppressed_count)."""
     if not config.enabled:
@@ -62,6 +65,8 @@ def find_duplicates(
         if path.suffix.lower() not in _EXTENSIONS:
             continue
         rel = path.relative_to(repo_root).as_posix()
+        if _MIGRATION_RE.search(rel):
+            continue
         content = path.read_text(encoding="utf-8", errors="ignore")
         if skip_generated and is_generated(content):
             continue
@@ -72,7 +77,8 @@ def find_duplicates(
         contents[rel] = content
         for i in range(len(lines) - n + 1):
             text = [t for _, t in lines[i : i + n]]
-            if sum(map(len, text)) < config.min_chars:
+            # Repetitive rows (fixtures, field setup) are data, not copied logic.
+            if sum(map(len, text)) < config.min_chars or len(set(text)) * 2 < n:
                 continue
             if all(_IMPORT_RE.match(t) for t in text):
                 continue
@@ -130,6 +136,9 @@ def find_duplicates(
             else:
                 spans.append([first, last])
         total = sum(last - first + 1 for first, last in spans)
+        # Copied test setup is reported only when it is twice the usual size.
+        if total < 2 * n and is_ignored(rel, test_paths):
+            continue
         ranges = ", ".join(f"{first}-{last}" for first, last in spans[:5])
         if len(spans) > 5:
             ranges += f" and {len(spans) - 5} more"
@@ -142,7 +151,7 @@ def find_duplicates(
                 title=TITLE,
                 message=f"{total} lines (lines {ranges}) duplicate code {where}{also}.",
                 severity=Severity.NOTE,
-                confidence=Confidence.HIGH,
+                confidence=Confidence.MEDIUM,
                 location=Location(path=rel, line=runs[0][0], end_line=runs[-1][1]),
                 fingerprint=Rule.fingerprint(
                     RULE_ID, rel, partner, *(block for _, _, block, _ in runs)

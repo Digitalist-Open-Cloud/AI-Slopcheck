@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS, is_ignored
+from doc_ai_slopcheck.engine.repo_files import PHP_EXTENSIONS
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -13,6 +13,7 @@ class SelectStarSqlRule(Rule):
     rule_id = "select_star_sql"
     title = "SELECT * used in SQL query"
     supported_extensions = {".py", ".js", ".jsx", ".ts", ".tsx", ".go"} | PHP_EXTENSIONS
+    skip_in_tests = True
 
     def scan_file(
         self,
@@ -26,8 +27,6 @@ class SelectStarSqlRule(Rule):
         if not rule_config.enabled or not self.applies_to_path(relative_path):
             return []
 
-        if is_ignored(relative_path, config.test_paths):
-            return []
 
         findings: list[Finding] = []
         for lineno, line in enumerate(content.splitlines(), start=1):

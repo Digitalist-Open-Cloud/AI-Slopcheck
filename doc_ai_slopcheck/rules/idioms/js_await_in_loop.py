@@ -4,7 +4,6 @@ import re
 from pathlib import Path
 
 from doc_ai_slopcheck.config import AppConfig
-from doc_ai_slopcheck.engine.repo_files import is_ignored
 from doc_ai_slopcheck.models import Confidence, Finding, Severity
 from doc_ai_slopcheck.rules.base import Rule
 
@@ -17,6 +16,7 @@ class JsAwaitInLoopRule(Rule):
     rule_id = "js_await_in_loop"
     title = "Await inside loop body"
     supported_extensions = {".js", ".jsx", ".ts", ".tsx"}
+    skip_in_tests = True
 
     def scan_file(
         self,
@@ -30,8 +30,6 @@ class JsAwaitInLoopRule(Rule):
         if not rule_config.enabled or not self.applies_to_path(relative_path):
             return []
 
-        if is_ignored(relative_path, config.test_paths):
-            return []
 
         lines = content.splitlines()
         findings: list[Finding] = []
