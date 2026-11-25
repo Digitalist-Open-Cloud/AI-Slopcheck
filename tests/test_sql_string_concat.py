@@ -135,3 +135,63 @@ def test_php_placeholders_and_drupal_table_braces_ok() -> None:
         '$label = "Updated " . $count . " rows";\n'
     )
     assert _scan(code, path="web/modules/custom/x/x.module") == []
+
+
+def test_php_value_checked_or_cast_where_assigned_is_clean() -> None:
+    code = (
+        "<?php\n"
+        "$db_name = DatabaseSsl::assertValidDatabaseName($this->config['db_name']);\n"
+        "$id = (int) $input;\n"
+        "$args = [\"--execute=SELECT SCHEMA_NAME FROM information_schema.SCHEMATA "
+        "WHERE SCHEMA_NAME = '$db_name'\"];\n"
+        "$sql = \"SELECT name FROM users WHERE id = $id\";\n"
+    )
+    assert _scan(code, "Lib/Drop.php") == []
+
+
+def test_php_value_is_reported_when_its_last_assignment_is_raw() -> None:
+    code = (
+        "<?php\n"
+        "$id = (int) $input;\n"
+        "$id = $_GET['id'];\n"
+        "$sql = \"SELECT name FROM users WHERE id = $id\";\n"
+        "$sql = \"SELECT name FROM users WHERE id = $id AND name = '$name'\";\n"
+    )
+    findings = _scan(code, "src/db.php")
+    assert [f.location.line for f in findings] == [4, 5]
+    assert all(f.severity.value == "error" for f in findings)
+
+
+def test_php_table_from_prefix_method_of_the_class_is_clean() -> None:
+    code = (
+        "<?php\n"
+        "class ListSegments {\n"
+        "    protected function getTable()\n"
+        "    {\n"
+        "        return Common::prefixTable(self::$rawPrefix);\n"
+        "    }\n"
+        "    public function one($idSegment) {\n"
+        "        return Db::get()->fetchRow(\"SELECT name FROM \" . $this->getTable()"
+        " . \" WHERE idsegment = ?\", $idSegment);\n"
+        "    }\n"
+        "    public function other() {\n"
+        "        return Db::get()->fetchAll(\"SELECT name FROM \" . $this->pickTable());\n"
+        "    }\n"
+        "}\n"
+    )
+    findings = _scan(code, "Commands/ListSegments.php")
+    assert [(f.location.line, f.severity.value) for f in findings] == [(11, "warning")]
+
+
+def test_php_checked_table_does_not_hide_another_spliced_expression() -> None:
+    code = (
+        "<?php\n"
+        "class Dao {\n"
+        "    private function table() { return Common::prefixTable('x'); }\n"
+        "    public function add($values) {\n"
+        "        Db::query('INSERT INTO `' . $this->table() . '` (`' . implode('`, `', "
+        "array_keys($values)) . '`) VALUES (?)', $values);\n"
+        "    }\n"
+        "}\n"
+    )
+    assert [f.location.line for f in _scan(code, "Dao/Dao.php")] == [5]

@@ -120,27 +120,81 @@ _CONSTANT_EXPR_RE = re.compile(r"\s*(?:[\w\\]*::)?[A-Z_][A-Z0-9_]*\b(?!\s*\()")
 _SQL_START_RE = re.compile(r"\b(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b", re.IGNORECASE)
 
 
-def _names_only(line: str) -> bool:
-    """True if every spliced-in value sits where a table/column name goes,
-    e.g. "SELECT * FROM $table WHERE id = ?"; values are then bound."""
+def _sql_span(line: str) -> tuple[int, int] | None:
+    """Where the SQL text of the line starts and ends."""
     sql_start = _SQL_START_RE.search(line)
     if not sql_start:
-        return False
+        return None
     # The SQL text ends where the string's own quote is followed by a comma;
     # what follows ("...= ?", $login) are bound parameters, not spliced-in
     # values. Other quote characters inside the string (`col`, 'x') don't count.
     quotes = _QUOTE_RE.findall(line, 0, sql_start.start())
     quote = quotes[-1] if quotes else "\""
     end = re.search(re.escape(quote) + r"\s*,", line[sql_start.start():])
-    stop = sql_start.start() + end.start() if end else len(line)
+    return sql_start.start(), sql_start.start() + end.start() if end else len(line)
+
+
+def _names_only(line: str) -> bool:
+    """True if every spliced-in value sits where a table/column name goes,
+    e.g. "SELECT * FROM $table WHERE id = ?"; values are then bound."""
+    span = _sql_span(line)
+    if not span:
+        return False
     sites = [
-        m for m in _INSERTION_RE.finditer(line, sql_start.start(), stop)
+        m for m in _INSERTION_RE.finditer(line, *span)
         if not _CONSTANT_EXPR_RE.match(line, m.end() - 1)
     ]
     return bool(sites) and all(
         _NAME_POSITION_RE.search(line[: m.start()]) or _NAME_LIKE_RE.match(line, m.start())
         for m in sites
     )
+
+
+# PHP: an expression spliced into SQL - $name, $this->name, self::name() ...
+_PHP_VALUE_RE = re.compile(r"(?:\$\w+|self|static)(?:(?:->|::)\$?\w+)*(?:\(\))?")
+# The right-hand side of an assignment that makes a value safe to splice in: a
+# cast to a number, or a call that checks it (assertValidName(), validateId()).
+_PHP_CHECKED_RE = re.compile(
+    r"\((?:int|integer|float)\)|(?:intval|floatval)\s*\(|"
+    r"(?:[\w\\]+\s*(?:::|->)\s*)*(?:assert|validate)\w*\s*\(",
+    re.IGNORECASE,
+)
+
+
+def _php_checked_values(lines: list[str], lineno: int) -> bool:
+    """True if all that is spliced into the SQL of this PHP line is a variable
+    that was cast or checked where it was last assigned, or a method of the
+    class that takes no arguments and returns a prefixed table name."""
+    line = lines[lineno - 1]
+    span = _sql_span(line)
+    if not span:
+        return False
+    sites = list(_INSERTION_RE.finditer(line, *span))
+    for site in sites:
+        # The spliced-in expression starts at its "$", or right after `" . `.
+        dollar = line.find("$", site.start(), site.end())
+        value = _PHP_VALUE_RE.match(line, dollar if dollar >= 0 else site.end() - 1)
+        if not value or not _php_checked(value.group(), lines, lineno):
+            return False
+    return bool(sites)
+
+
+def _php_checked(value: str, lines: list[str], lineno: int) -> bool:
+    if value.endswith("()"):
+        method = re.fullmatch(r"(?:\$this->|self::|static::)(\w+)\(\)", value)
+        return bool(method) and bool(re.search(
+            r"function\s+" + method.group(1)
+            + r"\s*\(\s*\)[^{;]*\{[^{}]*\breturn\b[^;{}]*prefixTable\(",
+            "\n".join(lines),
+        ))
+    if not re.fullmatch(r"\$\w+", value):
+        return False
+    assigned = re.compile(re.escape(value) + r"\s*=(?!=)\s*(.*)")
+    for earlier in reversed(lines[: lineno - 1]):
+        found = assigned.search(earlier)
+        if found:
+            return bool(_PHP_CHECKED_RE.match(found.group(1)))
+    return False
 
 
 class SqlStringConcatRule(Rule):
@@ -187,10 +241,13 @@ class SqlStringConcatRule(Rule):
                 if _SQL_STATEMENT_RE.search(line) and concat_re.search(line)
             ]
 
+        is_php = Path(relative_path).suffix.lower() in PHP_EXTENSIONS
         findings: list[Finding] = []
         for lineno in sorted(set(hit_lines)):
             evidence = lines[lineno - 1].strip()
             if _REVIEWED_RE.search(evidence):
+                continue
+            if is_php and _php_checked_values(lines, lineno):
                 continue
             if _names_only(evidence):
                 severity = Severity.WARNING

@@ -91,7 +91,10 @@ all. Set `test_paths: []` in the config to treat test code like production code.
 
 SQL built from strings is an `error` when a value is spliced in, and a
 `warning` when only a table or column name is (`FROM $table … WHERE id = ?`),
-since names can't be bound as parameters.
+since names can't be bound as parameters. In PHP nothing is reported when
+every spliced-in value was cast to a number or passed through an
+`assert…()`/`validate…()` call where it was last assigned, or is a table name
+from a no-argument method of the class that returns `prefixTable(…)`.
 
 ## PHP and Drupal
 
